@@ -64,7 +64,8 @@ const COMMANDS = new Set([
 ]);
 
 export async function runCli(argv) {
-  const [command = "help", ...rest] = argv;
+  const [rawCommand = "help", ...rest] = argv;
+  const command = rawCommand === "/start" ? "start" : rawCommand;
   if (command === "--version" || command === "-v" || command === "version") {
     await commandVersion();
     return;
@@ -131,6 +132,7 @@ function printHelp() {
 Usage:
   blueprint init [--directory <path>] [--dry-run] [--merge] [--override] [--yes] [--with-github] [--with-examples]
   blueprint start "I want to build ..." [--directory <path>] [--depth quick|standard|deep] [--run-research]
+  blueprint /start "I want to build ..." [--directory <path>] [--depth quick|standard|deep] [--run-research]
   blueprint doctor [--directory <path>] [--ci]
   blueprint --version
   blueprint status [--directory <path>]

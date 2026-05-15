@@ -47,7 +47,19 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 
 ## Simplest Workflow
 
-Start with one product prompt:
+After install, tell your agent:
+
+```text
+nắm quy trình framework này
+```
+
+Then start with one product prompt:
+
+```text
+/start tôi muốn làm website quản lý sinh viên
+```
+
+CLI equivalent:
 
 ```bash
 npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I need to build a student management web app" --directory . --depth deep

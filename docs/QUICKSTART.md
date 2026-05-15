@@ -43,6 +43,15 @@ I want to build a website for managing students at a training center.
 
 Use the one-command start flow:
 
+Chat-first flow:
+
+```text
+nắm quy trình framework này
+/start I want to build a website for managing students at a training center
+```
+
+CLI equivalent:
+
 ```bash
 npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I want to build a website for managing students at a training center" --directory . --depth deep
 ```

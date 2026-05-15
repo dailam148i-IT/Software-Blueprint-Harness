@@ -40,6 +40,7 @@ Creates the simple prompt workflow package from one product idea.
 
 ```bash
 blueprint start "I need to build a student management web app" --depth deep
+blueprint /start "I need to build a student management web app" --depth deep
 blueprint start "I need to build a student management web app" --depth deep --run-research
 ```
 

@@ -3,18 +3,39 @@ export const templates = {
 
 This repository uses Software Blueprint Harness. Do not start implementation until docs/readiness-review.md says READY_FOR_IMPLEMENTATION.
 
+## Bootstrap
+When the user says "nắm quy trình", "learn the process", or "follow the harness", read this file first, then read docs/AGENT_BOOTSTRAP.md and docs/SIMPLE_PROMPT_WORKFLOW.md.
+
+When the user sends:
+
+\`\`\`text
+/start <I want to build an app/web/SaaS/feature...>
+\`\`\`
+
+do not code. Treat it as a blueprint-start request:
+1. Create or refresh the intake package with \`blueprint start "<idea>" --depth deep\` when the CLI is available.
+2. Ask only the necessary clarifying questions.
+3. Run or plan refs/research.
+4. Create a multi-agent plan.
+5. Ask verifier agents to review the plan.
+6. Stop for human approval.
+7. After approval, write the full documentation set.
+8. Run readiness before implementation.
+
 ## Read Order
 1. README.md
-2. docs/HARNESS.md
-3. docs/FEATURE_INTAKE.md
-4. docs/product/product-passport.yaml
-5. docs/product/prd.md
-6. docs/architecture.md
-7. docs/product/data-api-contract.md
-8. docs/stories/
-9. docs/TEST_MATRIX.md
-10. docs/decisions/
-11. .blueprint/memory/project-memory.yaml
+2. docs/AGENT_BOOTSTRAP.md
+3. docs/SIMPLE_PROMPT_WORKFLOW.md
+4. docs/HARNESS.md
+5. docs/FEATURE_INTAKE.md
+6. docs/product/product-passport.yaml
+7. docs/product/prd.md
+8. docs/architecture.md
+9. docs/product/data-api-contract.md
+10. docs/stories/
+11. docs/TEST_MATRIX.md
+12. docs/decisions/
+13. .blueprint/memory/project-memory.yaml
 
 ## Task Loop
 1. Classify the request: new spec, spec slice, change request, initiative, maintenance, or harness improvement.
@@ -139,6 +160,66 @@ Agent-facing docs should be short, precise, and high-signal.
 Compress: AGENTS.md summaries, agent briefs, story summaries, status summaries, review comments.
 
 Do not over-compress: security warnings, irreversible action confirmations, API/schema contracts, acceptance criteria, complex setup steps.
+`,
+  "docs/AGENT_BOOTSTRAP.md": `# Agent Bootstrap
+
+This file tells an AI agent how to begin using the harness after installation.
+
+## User Says: "nắm quy trình"
+
+Respond by reading:
+
+1. AGENTS.md
+2. docs/SIMPLE_PROMPT_WORKFLOW.md
+3. docs/WORKFLOW.md
+4. docs/QUALITY_GATES.md
+5. docs/PROMPTS_END_TO_END.md
+
+Then summarize the operating rule in one short answer:
+
+\`\`\`text
+Tôi đã nắm quy trình. Khi bạn gửi /start <ý tưởng>, tôi sẽ hỏi vài câu cần thiết, chạy/chuẩn bị research, lập kế hoạch đa agent, cho verifier kiểm tra, chờ bạn chốt, rồi mới viết bộ tài liệu đầy đủ. Tôi sẽ không code trước readiness.
+\`\`\`
+
+## User Sends: /start
+
+Example:
+
+\`\`\`text
+/start tôi muốn làm website quản lý sinh viên
+\`\`\`
+
+Agent behavior:
+
+1. Extract the idea after \`/start\`.
+2. Run \`blueprint start "<idea>" --depth deep\` if the CLI is available.
+3. If the CLI is not available, manually create the same artifacts listed in docs/SIMPLE_PROMPT_WORKFLOW.md.
+4. Ask only the questions in the generated \`01-questions.md\`.
+5. Do not write PRD, architecture, stories, or code yet.
+6. Run or schedule refs/research.
+7. Create or present the multi-agent plan.
+8. Run verifier review.
+9. Stop at human approval.
+
+## After Human Approval
+
+Only after approval, write the full documentation set:
+
+- Product Passport
+- Research synthesis
+- PRD
+- UX spec
+- Architecture
+- Data/API contract
+- Decision records
+- Epics and stories
+- Test matrix
+- Readiness review
+- Memory and compact context
+
+## Hard Stop
+
+Do not start implementation until \`blueprint readiness\` says \`READY_FOR_IMPLEMENTATION\` or the human explicitly accepts named concerns.
 `,
   "docs/SIMPLE_PROMPT_WORKFLOW.md": `# Simple Prompt Workflow
 

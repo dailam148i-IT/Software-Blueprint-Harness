@@ -37,9 +37,12 @@ test("init creates harness and GitHub templates", async () => {
     assert.equal(await exists(path.join(root, "examples/demo-student-management/README.md")), true);
     assert.equal(await exists(path.join(root, "extensions/security-threat-model/extension.yaml")), true);
     const extensionManifest = await fs.readFile(path.join(root, "extensions/security-threat-model/extension.yaml"), "utf8");
+    const agentRules = await fs.readFile(path.join(root, "AGENTS.md"), "utf8");
     const gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf8");
     const workflow = await fs.readFile(path.join(root, ".github/workflows/blueprint-check.yml"), "utf8");
     assert.match(extensionManifest, /type: quality-gate-extension/);
+    assert.match(agentRules, /\/start/);
+    assert.equal(await exists(path.join(root, "docs/AGENT_BOOTSTRAP.md")), true);
     assert.match(gitignore, /refs\/vendor\//);
     assert.doesNotMatch(workflow, /--strict/);
   });
@@ -92,6 +95,16 @@ test("start creates simple prompt workflow package", async () => {
     assert.equal(await exists(path.join(root, latest.intake_dir, "orchestrator-prompt.md")), true);
     assert.equal(await exists(path.join(root, latest.research_dir, "plan.md")), true);
     assert.equal(await exists(path.join(root, `docs/intake/${latest.run_id}.md`)), true);
+  });
+});
+
+test("/start alias creates simple prompt workflow package", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const output = await capture(() => runCli(["/start", "I need to build an app", "--directory", root]));
+    assert.match(output, /created .blueprint\/intake/i);
+    const latest = JSON.parse(await fs.readFile(path.join(root, ".blueprint/intake/latest.json"), "utf8"));
+    assert.match(latest.idea, /build an app/);
   });
 });
 

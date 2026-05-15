@@ -27,14 +27,15 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 ## Workflow
 
 1. Inspect existing `AGENTS.md`, `docs/`, `.blueprint/`, and `blueprint.config.yaml`.
-2. For a raw app/web idea, prefer `blueprint start "<idea>"` or create the same intake package manually.
-3. Do not ask questions that can be answered from existing artifacts or research.
-4. For new input, run intake first.
-5. Ask only high-impact product or tradeoff questions.
-6. Create or update the smallest relevant artifacts.
-7. Stop for human approval before writing the full documentation set when the plan is not yet approved.
-8. Keep product docs, stories, decisions, test matrix, and memory aligned.
-9. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
+2. When the user says "nắm quy trình", read `AGENTS.md`, `docs/AGENT_BOOTSTRAP.md`, and `docs/SIMPLE_PROMPT_WORKFLOW.md`, then confirm the process briefly.
+3. When the user sends `/start <idea>`, prefer `blueprint start "<idea>"` or create the same intake package manually.
+4. Do not ask questions that can be answered from existing artifacts or research.
+5. For new input, run intake first.
+6. Ask only high-impact product or tradeoff questions.
+7. Create or update the smallest relevant artifacts.
+8. Stop for human approval before writing the full documentation set when the plan is not yet approved.
+9. Keep product docs, stories, decisions, test matrix, and memory aligned.
+10. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
 
 ## Gates
 

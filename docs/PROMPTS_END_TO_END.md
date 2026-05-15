@@ -7,8 +7,13 @@ Use these prompts with a coding agent after installing Software Blueprint Harnes
 Use this first when you want the harness to lead the process:
 
 ```text
-/blueprint-start
-I need to build: <app, web, SaaS, automation, or feature>.
+nắm quy trình framework này
+```
+
+Then:
+
+```text
+/start I need to build: <app, web, SaaS, automation, or feature>.
 
 First ask only the necessary questions. Then run deep refs/research with multi-agent review, create a multi-agent plan, ask verifier agents to check it, stop for human approval, and only after approval write the full documentation set.
 ```

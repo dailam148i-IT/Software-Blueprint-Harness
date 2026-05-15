@@ -2,11 +2,21 @@
 
 This is the shortest path through the harness.
 
+## Intended Chat Flow
+
+1. Install the framework.
+2. Tell the agent: `nắm quy trình framework này`.
+3. Start with `/start <ý tưởng>`.
+4. Agent asks only necessary questions.
+5. Agent prepares refs/research and a multi-agent plan.
+6. Verifier agents review the plan.
+7. Human approves.
+8. Agents write the full documentation set.
+
 ## One Prompt
 
 ```text
-/blueprint-start
-I need to build: <app, website, SaaS, automation, or feature>.
+/start I need to build: <app, website, SaaS, automation, or feature>.
 ```
 
 The orchestrator should not code. It should:
@@ -23,6 +33,12 @@ The orchestrator should not code. It should:
 
 ```bash
 blueprint start "I need to build a student management web app" --depth deep
+```
+
+Equivalent alias:
+
+```bash
+blueprint /start "I need to build a student management web app" --depth deep
 ```
 
 This creates:
