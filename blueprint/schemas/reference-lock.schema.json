@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Reference Lock",
+  "type": "object",
+  "required": ["schema_version", "synced_at", "references"],
+  "properties": {
+    "schema_version": { "type": "number" },
+    "synced_at": { "type": "string" },
+    "tool": { "type": "string" },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url", "status"],
+        "properties": {
+          "name": { "type": "string" },
+          "url": { "type": "string" },
+          "role": { "type": "string" },
+          "requested_ref": { "type": ["string", "null"] },
+          "trust_tier": { "type": "string" },
+          "commit": { "type": ["string", "null"] },
+          "branch": { "type": ["string", "null"] },
+          "dirty": { "type": "boolean" },
+          "status": { "enum": ["present", "missing"] }
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,14 @@ import { fileURLToPath } from "node:url";
 import { templates, exampleTemplates, githubTemplates } from "./templates.js";
 import { parseSimpleYaml, stringifySimpleYaml } from "./simple-yaml.js";
 import { validateProject } from "./validation.js";
-import { syncReferences } from "./refs.js";
+import { indexReferences, statusReferences, syncReferences } from "./refs.js";
+import {
+  createResearchPlan,
+  reportResearch,
+  runResearch,
+  synthesizeResearch,
+  validateResearch
+} from "./research.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,11 +58,16 @@ const COMMANDS = new Set([
   "extension",
   "integration",
   "github",
-  "refs"
+  "refs",
+  "research"
 ]);
 
 export async function runCli(argv) {
   const [command = "help", ...rest] = argv;
+  if (command === "--version" || command === "-v" || command === "version") {
+    await commandVersion();
+    return;
+  }
   if (!COMMANDS.has(command)) {
     throw new Error(`unknown command "${command}". Run "blueprint help".`);
   }
@@ -103,6 +115,9 @@ export async function runCli(argv) {
     case "refs":
       await commandRefs(rest);
       return;
+    case "research":
+      await commandResearch(rest);
+      return;
   }
 }
 
@@ -111,7 +126,8 @@ function printHelp() {
 
 Usage:
   blueprint init [--directory <path>] [--dry-run] [--merge] [--override] [--yes] [--with-github] [--with-examples]
-  blueprint doctor [--directory <path>]
+  blueprint doctor [--directory <path>] [--ci]
+  blueprint --version
   blueprint status [--directory <path>]
   blueprint check [--directory <path>] [--strict]
   blueprint readiness [--directory <path>] [--ci]
@@ -127,10 +143,22 @@ Usage:
   blueprint integration add github [--directory <path>]
   blueprint github create-issues [--directory <path>] [--use-gh] [--repo owner/name] [--force]
   blueprint refs sync [--directory <path>] [--dry-run] [--force]
+  blueprint refs status [--directory <path>]
+  blueprint refs index [--directory <path>]
+  blueprint research plan [--topic <text>] [--depth quick|standard|deep] [--directory <path>]
+  blueprint research run [--topic <text>] [--depth quick|standard|deep] [--directory <path>]
+  blueprint research synthesize [--run <id>] [--directory <path>]
+  blueprint research report [--run <id>] [--directory <path>]
+  blueprint research validate [--run <id>] [--strict] [--ci] [--directory <path>]
 
 Principle:
   No implementation before readiness says READY_FOR_IMPLEMENTATION.
 `);
+}
+
+async function commandVersion() {
+  const pkg = await readJson(path.join(repoRoot, "package.json"), { version: "unknown" });
+  console.log(pkg.version);
 }
 
 function parseOptions(args) {
@@ -269,12 +297,17 @@ async function commandDoctor(options) {
   const nodeMajor = Number(process.versions.node.split(".")[0]);
   const packageExists = await exists(path.join(repoRoot, "package.json"));
   const targetExists = await exists(root);
+  const ok = nodeMajor >= 18 && packageExists && targetExists;
 
   console.log("Software Blueprint Harness Doctor");
   console.log(`Node.js: ${process.versions.node} ${nodeMajor >= 18 ? "OK" : "FAIL (need >=18)"}`);
   console.log(`Framework root: ${repoRoot} ${packageExists ? "OK" : "WARN"}`);
   console.log(`Target directory: ${root} ${targetExists ? "OK" : "missing"}`);
   console.log(`Templates loaded: ${Object.keys(templates).length}`);
+
+  if (options.ci && !ok) {
+    process.exitCode = 1;
+  }
 }
 
 async function commandStatus(options) {
@@ -581,21 +614,93 @@ ${text}
 async function commandRefs(args) {
   const subcommand = args[0];
   const options = parseOptions(args.slice(1));
-  if (subcommand !== "sync") {
-    throw new Error("use `blueprint refs sync [--dry-run] [--force]`.");
-  }
   const targetRoot = resolveDirectory(options);
-  const ignoreResults = await ensureTargetGitignore(targetRoot, options);
-  const results = await syncReferences({
-    repoRoot,
-    targetRoot,
-    dryRun: Boolean(options["dry-run"]),
-    force: Boolean(options.force)
-  });
-  for (const result of [...ignoreResults, ...results]) {
-    const suffix = result.reason ? ` (${result.reason})` : "";
-    console.log(`${result.action.padEnd(7)} ${result.name || result.relativePath}${suffix}`);
+
+  if (subcommand === "sync") {
+    const ignoreResults = await ensureTargetGitignore(targetRoot, options);
+    const results = await syncReferences({
+      repoRoot,
+      targetRoot,
+      dryRun: Boolean(options["dry-run"]),
+      force: Boolean(options.force)
+    });
+    for (const result of [...ignoreResults, ...results]) {
+      const suffix = result.reason ? ` (${result.reason})` : "";
+      console.log(`${result.action.padEnd(7)} ${result.name || result.relativePath}${suffix}`);
+    }
+    return;
   }
+
+  if (subcommand === "status") {
+    const rows = await statusReferences({ repoRoot, targetRoot });
+    for (const row of rows) {
+      const commit = row.commit ? row.commit.slice(0, 12) : "missing";
+      const locked = row.lock_matches ? "lock-ok" : row.locked_commit ? "lock-drift" : "no-lock";
+      console.log(`${row.status.padEnd(8)} ${row.name.padEnd(32)} ${commit} ${locked}`);
+    }
+    return;
+  }
+
+  if (subcommand === "index") {
+    const index = await indexReferences({ repoRoot, targetRoot });
+    for (const reference of index.references) {
+      console.log(`${reference.status.padEnd(8)} ${reference.name.padEnd(32)} files=${reference.file_count}`);
+    }
+    console.log("created .blueprint/refs/index.json");
+    return;
+  }
+
+  throw new Error("use `blueprint refs sync|status|index`.");
+}
+
+async function commandResearch(args) {
+  const subcommand = args[0];
+  const options = parseOptions(args.slice(1));
+  const targetRoot = resolveDirectory(options);
+  const topic = options.topic || options._.join(" ") || "production-grade software blueprint harness";
+  const depth = options.depth || "standard";
+
+  if (subcommand === "plan") {
+    const result = await createResearchPlan({ targetRoot, topic, depth });
+    console.log(`created ${path.relative(targetRoot, result.runDir).replaceAll("\\", "/")}/plan.md`);
+    return;
+  }
+
+  if (subcommand === "run") {
+    const result = await runResearch({ repoRoot, targetRoot, topic, depth });
+    console.log(`created .blueprint/research/runs/${result.runId}`);
+    console.log(`findings ${result.findings.length}`);
+    console.log(`claims ${result.claimMap.claims.length}`);
+    return;
+  }
+
+  if (subcommand === "synthesize") {
+    const result = await synthesizeResearch({ targetRoot, runId: options.run });
+    console.log(`updated ${path.relative(targetRoot, path.join(result.runDir, "synthesis.md")).replaceAll("\\", "/")}`);
+    console.log("updated docs/research/latest-reference-synthesis.md");
+    return;
+  }
+
+  if (subcommand === "report") {
+    const report = await reportResearch({ targetRoot, runId: options.run });
+    console.log(`Run: ${report.run}`);
+    console.log(`References: ${report.present_references}/${report.references} present`);
+    console.log(`Findings: ${report.findings}`);
+    console.log(`Claims: ${report.claims}`);
+    console.log(`Synthesis: ${report.synthesis}`);
+    return;
+  }
+
+  if (subcommand === "validate") {
+    const result = await validateResearch({ targetRoot, runId: options.run });
+    console.log(result.status);
+    for (const blocker of result.blockers) console.log(`blocker ${blocker}`);
+    for (const concern of result.concerns) console.log(`concern ${concern}`);
+    if (options.ci && (result.status === "FAIL" || (options.strict && result.concerns.length > 0))) process.exitCode = 1;
+    return;
+  }
+
+  throw new Error("use `blueprint research plan|run|synthesize|report|validate`.");
 }
 
 async function artifactRows(root) {

@@ -1,16 +1,33 @@
 {
   "name": "software-blueprint-harness",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Documentation-first software delivery harness for humans, agents, and multi-agent development teams.",
   "type": "module",
   "bin": {
     "blueprint": "./bin/blueprint.js"
   },
+  "files": [
+    "AGENTS.md",
+    "INSTALL.md",
+    "LICENSE",
+    "README.md",
+    "bin/",
+    "blueprint/",
+    "docs/",
+    "examples/",
+    "extensions/",
+    "integrations/",
+    "refs/README.md",
+    "refs/catalog.json",
+    "scripts/",
+    "skills/"
+  ],
   "scripts": {
     "doctor": "node bin/blueprint.js doctor",
     "check": "node --test test/cli.test.js",
     "test": "node --test test/cli.test.js",
-    "test:init": "node bin/blueprint.js init --directory ./tmp-test --yes --with-github --with-examples"
+    "test:init": "node bin/blueprint.js init --directory ./tmp-test --yes --with-github --with-examples",
+    "pack:check": "npm pack --dry-run"
   },
   "keywords": [
     "ai-agents",
@@ -24,6 +41,14 @@
   ],
   "author": "dailam148i-IT",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dailam148i-IT/Software-Blueprint-Harness.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dailam148i-IT/Software-Blueprint-Harness/issues"
+  },
+  "homepage": "https://github.com/dailam148i-IT/Software-Blueprint-Harness#readme",
   "engines": {
     "node": ">=18.0.0"
   }

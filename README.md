@@ -38,9 +38,17 @@ Preview first:
 npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --dry-run
 ```
 
+Until the package is installed globally or published to npm, use the GitHub `npx` runner for follow-up commands:
+
+```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness check --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
+```
+
 ## CLI
 
 ```bash
+blueprint --version
 blueprint doctor
 blueprint init --directory . --yes
 blueprint status
@@ -57,6 +65,10 @@ blueprint extension run before_readiness
 blueprint integration add github
 blueprint github create-issues
 blueprint refs sync --dry-run
+blueprint refs status
+blueprint refs index
+blueprint research run --topic "student management SaaS" --depth deep
+blueprint research validate
 ```
 
 Fresh GitHub installs run `blueprint check` without strict mode so a new repo can push while expected setup concerns still exist. Use `blueprint readiness` to enforce pre-code quality gates.
@@ -66,6 +78,9 @@ Fresh GitHub installs run `blueprint check` without strict mode so a new repo ca
 - [Quickstart](docs/QUICKSTART.md)
 - [Usage Guide](docs/USAGE.md)
 - [CLI Commands](docs/COMMANDS.md)
+- [Research Pipeline](docs/RESEARCH_PIPELINE.md)
+- [End-to-End Prompt Playbook](docs/PROMPTS_END_TO_END.md)
+- [Production V1 Bar](docs/PRODUCTION_V1.md)
 - [Workflow](docs/WORKFLOW.md)
 - [Quality Gates](docs/QUALITY_GATES.md)
 - [Multi-Agent Model](docs/MULTI_AGENT_OPERATING_MODEL.md)
@@ -81,6 +96,9 @@ docs/
   WORKFLOW.md
   FEATURE_INTAKE.md
   QUALITY_GATES.md
+  RESEARCH_PIPELINE.md
+  PROMPTS_END_TO_END.md
+  PRODUCTION_V1.md
   TEST_MATRIX.md
   MEMORY.md
   product/

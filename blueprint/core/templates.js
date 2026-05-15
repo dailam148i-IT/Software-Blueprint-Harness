@@ -140,6 +140,79 @@ Compress: AGENTS.md summaries, agent briefs, story summaries, status summaries, 
 
 Do not over-compress: security warnings, irreversible action confirmations, API/schema contracts, acceptance criteria, complex setup steps.
 `,
+  "docs/RESEARCH_PIPELINE.md": `# Research Pipeline
+
+Use refs and research commands to turn source repositories into evidence-backed decisions.
+
+\`\`\`bash
+blueprint refs sync --dry-run
+blueprint refs sync
+blueprint refs status
+blueprint refs index
+blueprint research plan --topic "your product" --depth deep
+blueprint research run --topic "your product" --depth deep
+blueprint research report
+blueprint research validate
+\`\`\`
+
+Outputs live in \`.blueprint/refs/\`, \`.blueprint/research/runs/\`, and \`docs/research/\`.
+
+Do not integrate a reference idea unless it maps to a CLI command, schema, template, extension, integration, readiness gate, test, or documented workflow.
+`,
+  "docs/PRODUCTION_V1.md": `# Production V1 Bar
+
+The harness is production-ready when it can be installed, checked, researched, extended, and used by agents without hidden setup knowledge.
+
+Required capabilities:
+- One-command install.
+- Non-destructive init.
+- Placeholder-blocking readiness gate.
+- Stable memory and context export.
+- Extension outputs that can block readiness.
+- GitHub templates and issue export.
+- Reference sync, lock, index, research synthesis, and evidence validation.
+- End-to-end prompt playbook.
+- Automated tests for core workflows.
+`,
+  "docs/PROMPTS_END_TO_END.md": `# End-to-End Prompt Playbook
+
+Use these prompts in order.
+
+## Intake
+\`\`\`text
+I want to build: <product>. Act as orchestrator. Do not code yet. Classify the request, ask only questions that cannot be researched, choose risk lane, and prepare Product Passport.
+\`\`\`
+
+## Research
+\`\`\`text
+Run deep reference and domain research. Produce source inventory, findings, claim map, conflicts, synthesis, and integration proposal. Do not integrate claims without evidence.
+\`\`\`
+
+## Product
+\`\`\`text
+Write the PRD with problem, users, scope, out-of-scope, requirements, non-functional requirements, acceptance criteria, assumptions, and open questions.
+\`\`\`
+
+## Architecture
+\`\`\`text
+Propose technology options with tradeoffs, recommend one, then update architecture and create a decision record after approval.
+\`\`\`
+
+## Stories
+\`\`\`text
+Create implementation-ready story packets with product contract, acceptance criteria, validation proof, ownership, allowed files, forbidden files, and dependencies.
+\`\`\`
+
+## Readiness
+\`\`\`text
+Run extension hooks and readiness. Fix blockers before implementation. Do not start code until READY_FOR_IMPLEMENTATION or accepted concerns have owners.
+\`\`\`
+
+## Implementation
+\`\`\`text
+Implement only story <US-xxx>. Read the context packet. Stay in allowed scope. Run tests, update TEST_MATRIX evidence, update memory, and summarize residual risk.
+\`\`\`
+`,
   "docs/TEST_MATRIX.md": `# Test Matrix
 
 This file maps product behavior to proof.
@@ -312,7 +385,7 @@ evidence: []
   ".blueprint/memory/agent-handoffs.json": `[]\n`,
   ".blueprint/context-packets/.gitkeep": "",
   "extensions/security-threat-model/extension.yaml": `name: security-threat-model
-type: gate
+type: quality-gate-extension
 version: 0.1.0
 runs_on:
   - before_readiness
@@ -333,7 +406,7 @@ Runs before readiness when the product touches auth, authorization, payment, or 
 The output must not stay BLOCKED when implementation begins.
 `,
   "extensions/privacy-impact-assessment/extension.yaml": `name: privacy-impact-assessment
-type: gate
+type: quality-gate-extension
 version: 0.1.0
 runs_on:
   - before_readiness

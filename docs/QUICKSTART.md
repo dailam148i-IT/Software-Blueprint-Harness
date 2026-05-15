@@ -17,10 +17,12 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --dry-
 ## 2. Check The Harness
 
 ```bash
-blueprint doctor
-blueprint status
-blueprint check
+npx -y github:dailam148i-IT/Software-Blueprint-Harness doctor --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness status --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness check --directory .
 ```
+
+If you installed the package globally or as a project dependency, you can use `blueprint` instead of the GitHub `npx` runner.
 
 Expected early result:
 
@@ -54,7 +56,7 @@ The harness should produce or guide you toward:
 ## 4. Create A Story
 
 ```bash
-blueprint new-story "Create student profile"
+npx -y github:dailam148i-IT/Software-Blueprint-Harness new-story "Create student profile" --directory .
 ```
 
 Then edit the generated story in `docs/stories/` until it has:
@@ -68,7 +70,7 @@ Then edit the generated story in `docs/stories/` until it has:
 ## 5. Export Context For A Coding Agent
 
 ```bash
-blueprint export-context US-001 --agent developer-agent
+npx -y github:dailam148i-IT/Software-Blueprint-Harness export-context US-001 --agent developer-agent --directory .
 ```
 
 The packet appears in:
@@ -82,7 +84,7 @@ Give that packet to a coding agent instead of dumping the whole repo context.
 ## 6. Run Readiness
 
 ```bash
-blueprint readiness
+npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 ```
 
 Only start implementation when:
@@ -96,8 +98,10 @@ If the status is `FAIL`, fix blockers first.
 ## 7. Optional: Sync References
 
 ```bash
-blueprint refs sync --dry-run
-blueprint refs sync
+npx -y github:dailam148i-IT/Software-Blueprint-Harness refs sync --directory . --dry-run
+npx -y github:dailam148i-IT/Software-Blueprint-Harness refs sync --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness refs index --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness research run --directory . --topic "student management SaaS" --depth deep
 ```
 
 This clones the source method repos into `refs/vendor/` for local study.
@@ -105,7 +109,7 @@ This clones the source method repos into `refs/vendor/` for local study.
 ## 8. Optional: Export GitHub Issues
 
 ```bash
-blueprint github create-issues
+npx -y github:dailam148i-IT/Software-Blueprint-Harness github create-issues --directory .
 ```
 
 This converts story packets into issue markdown under `.blueprint/github/issues/`.

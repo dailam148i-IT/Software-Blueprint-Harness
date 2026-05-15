@@ -6,6 +6,8 @@ Checks local runtime and framework health.
 
 ```bash
 blueprint doctor
+blueprint doctor --ci
+blueprint --version
 ```
 
 ## `blueprint init`
@@ -124,10 +126,29 @@ The command writes `.blueprint/github/issues.index.json` to avoid duplicate issu
 
 ## `blueprint refs sync`
 
-Clones the reference repositories listed in `refs/catalog.json` into `refs/vendor/`.
+Clones the reference repositories listed in `refs/catalog.json` into `refs/vendor/`, writes a commit lock, and supports status/index commands for research.
 
 ```bash
 blueprint refs sync --dry-run
 blueprint refs sync
 blueprint refs sync --force
+blueprint refs status
+blueprint refs index
 ```
+
+`refs index` writes `.blueprint/refs/index.json`, `.blueprint/refs/index.summary.json`, and `.blueprint/refs/index.files.jsonl`.
+
+## `blueprint research`
+
+Creates evidence-backed research runs from synced reference repositories.
+
+```bash
+blueprint research plan --topic "student management SaaS" --depth deep
+blueprint research run --topic "student management SaaS" --depth deep
+blueprint research report
+blueprint research synthesize
+blueprint research validate
+blueprint research validate --strict --ci
+```
+
+Research runs write `.blueprint/research/runs/<run-id>/` with plan, source inventory, evidence cards, findings, claim map, conflicts, synthesis, and integration proposal.

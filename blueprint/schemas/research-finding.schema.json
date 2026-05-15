@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Research Finding",
+  "type": "object",
+  "required": ["id", "reference", "claim", "source_span", "quote_hash", "maps_to"],
+  "properties": {
+    "id": { "type": "string" },
+    "reference": { "type": "string" },
+    "claim": { "type": "string" },
+    "evidence": { "type": "string" },
+    "source_span": {
+      "type": "object",
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": { "type": "string" },
+        "start_line": { "type": "number" },
+        "end_line": { "type": "number" },
+        "commit": { "type": ["string", "null"] }
+      }
+    },
+    "quote_hash": { "type": "string" },
+    "evidence_type": { "enum": ["concept_marker", "guidance"] },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "maps_to": { "type": "string" },
+    "limitations": { "type": "string" }
+  }
+}

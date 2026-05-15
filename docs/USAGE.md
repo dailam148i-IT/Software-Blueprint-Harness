@@ -80,6 +80,10 @@ The framework keeps reference repos out of git history by default. Clone them lo
 ```bash
 blueprint refs sync --dry-run
 blueprint refs sync
+blueprint refs status
+blueprint refs index
+blueprint research run --topic "your product" --depth deep
+blueprint research validate
 ```
 
 References are cloned into:
@@ -93,6 +97,8 @@ The conceptual mapping lives in:
 ```text
 docs/REFERENCE_SYNTHESIS.md
 ```
+
+The generated research run lives in `.blueprint/research/runs/<run-id>/` and includes evidence cards, claim map, conflicts, synthesis, and integration proposal.
 
 ## Common Workflow: Run Extension Hooks
 

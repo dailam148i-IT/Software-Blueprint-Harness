@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Reference Index File",
+  "type": "object",
+  "required": ["file_id", "ref_name", "path", "sha256", "bytes", "lines"],
+  "properties": {
+    "file_id": { "type": "string" },
+    "ref_name": { "type": "string" },
+    "commit": { "type": ["string", "null"] },
+    "path": { "type": "string" },
+    "language": { "type": "string" },
+    "sha256": { "type": "string" },
+    "bytes": { "type": "number" },
+    "lines": { "type": "number" },
+    "headings": { "type": "array", "items": { "type": "string" } },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "excerpt_hashes": { "type": "array", "items": { "type": "string" } }
+  }
+}

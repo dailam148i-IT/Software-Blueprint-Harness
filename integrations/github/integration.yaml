@@ -4,8 +4,6 @@ provider: github
 commands:
   - integration add github
   - github create-issues
-  - github create-pr-template
-  - github sync-status
 required_permissions:
   - contents:read
   - issues:write

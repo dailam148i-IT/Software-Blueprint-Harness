@@ -36,10 +36,24 @@ test("init creates harness and GitHub templates", async () => {
     assert.equal(await exists(path.join(root, ".github/workflows/blueprint-check.yml")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/README.md")), true);
     assert.equal(await exists(path.join(root, "extensions/security-threat-model/extension.yaml")), true);
+    const extensionManifest = await fs.readFile(path.join(root, "extensions/security-threat-model/extension.yaml"), "utf8");
     const gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf8");
     const workflow = await fs.readFile(path.join(root, ".github/workflows/blueprint-check.yml"), "utf8");
+    assert.match(extensionManifest, /type: quality-gate-extension/);
     assert.match(gitignore, /refs\/vendor\//);
     assert.doesNotMatch(workflow, /--strict/);
+  });
+});
+
+test("version and doctor ci expose release health", async () => {
+  await withTempProject(async (root) => {
+    const version = await capture(() => runCli(["--version"]));
+    assert.match(version, /\d+\.\d+\.\d+/);
+
+    const missing = path.join(root, "missing-target");
+    await capture(() => runCli(["doctor", "--directory", missing, "--ci"]));
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
   });
 });
 
@@ -152,6 +166,39 @@ test("github issue export creates issue markdown and index", async () => {
     const index = JSON.parse(await fs.readFile(path.join(root, ".blueprint/github/issues.index.json"), "utf8"));
     assert.equal(index["US-001"].status, "exported");
     assert.equal(index["US-001"].body_file, ".blueprint/github/issues/US-001.md");
+  });
+});
+
+test("refs index and research run create evidence-backed artifacts", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const refRoot = path.join(root, "refs/vendor/harness-experimental");
+    await fs.mkdir(refRoot, { recursive: true });
+    await fs.writeFile(
+      path.join(refRoot, "README.md"),
+      `# Agent Harness
+
+## Story Packets
+Agents need scoped story packets, validation gates, memory, and context handoffs before implementation.
+`,
+      "utf8"
+    );
+
+    await runCli(["refs", "index", "--directory", root]);
+    const indexSummary = JSON.parse(await fs.readFile(path.join(root, ".blueprint/refs/index.summary.json"), "utf8"));
+    const indexFiles = await fs.readFile(path.join(root, ".blueprint/refs/index.files.jsonl"), "utf8");
+    assert.equal(indexSummary.references.find((ref) => ref.name === "harness-experimental").file_count, 1);
+    assert.match(indexFiles, /sha256/);
+
+    await runCli(["research", "run", "--directory", root, "--topic", "agent harness", "--depth", "quick"]);
+    const report = await capture(() => runCli(["research", "report", "--directory", root]));
+    const validation = await capture(() => runCli(["research", "validate", "--directory", root]));
+    assert.match(report, /Findings:/);
+    assert.match(validation, /PASS_WITH_CONCERNS|PASS/);
+    const runsRoot = path.join(root, ".blueprint/research/runs");
+    const runId = (await fs.readdir(runsRoot)).sort().at(-1);
+    assert.equal(await exists(path.join(runsRoot, runId, "evidence-cards.jsonl")), true);
+    assert.equal(await exists(path.join(root, "docs/research/latest-reference-synthesis.md")), true);
   });
 });
 

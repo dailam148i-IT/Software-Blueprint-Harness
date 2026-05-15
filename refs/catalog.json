@@ -3,26 +3,51 @@
     {
       "name": "harness-experimental",
       "url": "https://github.com/hoangnb24/harness-experimental.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["agent harness", "docs-as-agent-API", "story packets", "test matrix", "memory"],
+      "expected_outputs": ["docs/HARNESS.md", "docs/FEATURE_INTAKE.md", "docs/TEST_MATRIX.md"],
       "role": "Agent harness, docs-as-agent-API, feature intake, story packets, test matrix, memory, context packets."
     },
     {
       "name": "BMAD-METHOD",
       "url": "https://github.com/bmad-code-org/BMAD-METHOD.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["analysis", "planning", "solutioning", "implementation lifecycle", "role handoffs"],
+      "expected_outputs": ["docs/WORKFLOW.md", "docs/MULTI_AGENT_OPERATING_MODEL.md", "docs/AGILE_SCRUM.md"],
       "role": "Analysis, planning, solutioning, implementation lifecycle and role handoffs."
     },
     {
       "name": "academic-research-skills",
       "url": "https://github.com/Imbad0202/academic-research-skills.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["research pipeline", "integrity gates", "review traceability", "evidence"],
+      "expected_outputs": ["docs/RESEARCH_PIPELINE.md", "docs/QUALITY_GATES.md"],
       "role": "Research pipeline, integrity gates, review/revise traceability."
     },
     {
       "name": "academic-research-skills-codex",
       "url": "https://github.com/Imbad0202/academic-research-skills-codex.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["Codex packaging", "skills", "research workflow"],
+      "expected_outputs": ["skills/software-blueprint-harness/SKILL.md"],
       "role": "Codex-oriented research suite packaging."
     },
     {
       "name": "caveman",
       "url": "https://github.com/JuliusBrussee/caveman.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["context compression", "agent-facing docs", "skill distribution"],
+      "expected_outputs": ["docs/CONTEXT_COMPRESSION.md", "docs/PROMPTS_END_TO_END.md"],
       "role": "Context compression, concise agent-facing docs, multi-tool skill distribution."
     }
   ]
