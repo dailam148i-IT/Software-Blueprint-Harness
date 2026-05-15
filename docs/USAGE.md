@@ -105,6 +105,8 @@ blueprint extension run before_readiness
 
 If an extension declares outputs, the hook runner creates those docs unless they already exist.
 
+Built-in security and privacy extensions also declare `required_when.risk_flags`. During `blueprint readiness`, a high-risk product that mentions auth, authorization, payment, personal data, or sensitive data must have the required extension outputs, and those outputs must not say `BLOCKED`.
+
 ## Common Workflow: Export GitHub Issues
 
 After stories exist:
@@ -119,7 +121,11 @@ This creates issue markdown under:
 .blueprint/github/issues/
 ```
 
-Use `--use-gh` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown.
+The command also maintains `.blueprint/github/issues.index.json`. Use `--use-gh` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown. Re-running with `--use-gh` skips stories already marked created unless you pass `--force`.
+
+## GitHub CI Behavior
+
+The installed GitHub workflow runs `blueprint check` without `--strict`. This lets a new project push while it still has expected concerns such as missing stories. Structural failures still fail, and teams can run `blueprint check --strict` locally or in a stricter branch protection workflow once adoption is complete.
 
 ## What The AI Should Ask
 

@@ -59,6 +59,8 @@ blueprint github create-issues
 blueprint refs sync --dry-run
 ```
 
+Fresh GitHub installs run `blueprint check` without strict mode so a new repo can push while expected setup concerns still exist. Use `blueprint readiness` to enforce pre-code quality gates.
+
 ## Documentation
 
 - [Quickstart](docs/QUICKSTART.md)
@@ -88,6 +90,10 @@ docs/
 .blueprint/
   memory/
   context-packets/
+extensions/
+  security-threat-model/
+  privacy-impact-assessment/
+.gitignore
 ```
 
 ## Workflow

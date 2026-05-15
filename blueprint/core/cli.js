@@ -35,6 +35,8 @@ const REQUIRED_ARTIFACTS = [
   ".blueprint/memory/agent-handoffs.json"
 ];
 
+const TARGET_GITIGNORE_ENTRIES = ["refs/vendor/", "refs/REFS_LOCK.json"];
+
 const COMMANDS = new Set([
   "help",
   "init",
@@ -123,7 +125,7 @@ Usage:
   blueprint extension list [--directory <path>]
   blueprint extension run <hook> [--directory <path>]
   blueprint integration add github [--directory <path>]
-  blueprint github create-issues [--directory <path>] [--use-gh] [--repo owner/name]
+  blueprint github create-issues [--directory <path>] [--use-gh] [--repo owner/name] [--force]
   blueprint refs sync [--directory <path>] [--dry-run] [--force]
 
 Principle:
@@ -210,6 +212,29 @@ async function writeMany(root, files, options) {
   return results;
 }
 
+async function ensureTargetGitignore(root, options = {}) {
+  const relativePath = ".gitignore";
+  const target = path.join(root, relativePath);
+  const current = (await safeRead(target)) || "";
+  const missing = TARGET_GITIGNORE_ENTRIES.filter((entry) => !current.split(/\r?\n/).includes(entry));
+
+  if (missing.length === 0) {
+    return [{ relativePath, action: "skip", reason: "refs-ignore-present" }];
+  }
+
+  const action = current ? "update" : "create";
+  if (options["dry-run"]) {
+    return [{ relativePath, action, reason: `add ${missing.join(", ")}` }];
+  }
+
+  const prefix = current.trimEnd();
+  const block = ["# Software Blueprint Harness references", ...missing].join("\n");
+  const separator = prefix ? "\n\n" : "";
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, `${prefix}${separator}${block}\n`, "utf8");
+  return [{ relativePath, action, reason: `add ${missing.join(", ")}` }];
+}
+
 async function commandInit(options) {
   const root = resolveDirectory(options);
   if (!options.yes && !options["dry-run"]) {
@@ -227,6 +252,7 @@ async function commandInit(options) {
   }
 
   const results = await writeMany(root, files, options);
+  results.push(...(await ensureTargetGitignore(root, options)));
   printWriteResults(root, results, options);
 }
 
@@ -298,18 +324,21 @@ async function commandCheck(options) {
 
 async function commandReadiness(options) {
   const root = resolveDirectory(options);
-  const result = await validateProject(root, REQUIRED_ARTIFACTS);
+  const result = await validateProject(root, REQUIRED_ARTIFACTS, { readiness: true });
   const missing = result.missing;
   const failures = result.failures;
+  const validationConcerns = result.concerns;
   const stories = await listMarkdown(path.join(root, "docs/stories"));
   const matrix = await safeRead(path.join(root, "docs/TEST_MATRIX.md"));
+  const extensionGate = await evaluateExtensionGates(root);
   const blockers = [];
-  const concerns = [];
+  const concerns = [...validationConcerns, ...extensionGate.concerns];
 
   if (missing.length > 0) {
     blockers.push(`Missing required artifacts: ${missing.join(", ")}`);
   }
   blockers.push(...failures);
+  blockers.push(...extensionGate.blockers);
   if (stories.length === 0) {
     blockers.push("No implementation story packets exist.");
   }
@@ -497,6 +526,8 @@ async function commandGithub(args) {
   }
   const root = resolveDirectory(options);
   const outDir = path.join(root, ".blueprint/github/issues");
+  const indexPath = path.join(root, ".blueprint/github/issues.index.json");
+  const issueIndex = await readJson(indexPath, {});
   await fs.mkdir(outDir, { recursive: true });
   const storiesDir = path.join(root, "docs/stories");
   const stories = await listMarkdown(storiesDir);
@@ -514,12 +545,37 @@ ${text}
     const bodyFile = path.join(outDir, `${id}.md`);
     await fs.writeFile(bodyFile, body, "utf8");
     console.log(`created ${path.relative(root, bodyFile).replaceAll("\\", "/")}`);
+
+    const relativeBodyFile = path.relative(root, bodyFile).replaceAll("\\", "/");
+    issueIndex[id] = {
+      ...(issueIndex[id] || {}),
+      story: path.relative(root, storyPath).replaceAll("\\", "/"),
+      title,
+      body_file: relativeBodyFile,
+      status: issueIndex[id]?.status || "exported",
+      updated_at: new Date().toISOString()
+    };
+
     if (options["use-gh"]) {
+      if (issueIndex[id]?.status === "created" && !options.force) {
+        console.log(`skip    ${id} (already created; use --force to recreate)`);
+        await fs.writeFile(indexPath, `${JSON.stringify(issueIndex, null, 2)}\n`, "utf8");
+        continue;
+      }
       const ghArgs = ["issue", "create", "--title", title, "--body-file", bodyFile];
       if (options.repo) ghArgs.push("--repo", options.repo);
       await runCommand("gh", ghArgs);
+      issueIndex[id] = {
+        ...issueIndex[id],
+        status: "created",
+        repo: options.repo || null,
+        created_at: issueIndex[id]?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
+    await fs.writeFile(indexPath, `${JSON.stringify(issueIndex, null, 2)}\n`, "utf8");
   }
+  await fs.writeFile(indexPath, `${JSON.stringify(issueIndex, null, 2)}\n`, "utf8");
 }
 
 async function commandRefs(args) {
@@ -529,15 +585,16 @@ async function commandRefs(args) {
     throw new Error("use `blueprint refs sync [--dry-run] [--force]`.");
   }
   const targetRoot = resolveDirectory(options);
+  const ignoreResults = await ensureTargetGitignore(targetRoot, options);
   const results = await syncReferences({
     repoRoot,
     targetRoot,
     dryRun: Boolean(options["dry-run"]),
     force: Boolean(options.force)
   });
-  for (const result of results) {
+  for (const result of [...ignoreResults, ...results]) {
     const suffix = result.reason ? ` (${result.reason})` : "";
-    console.log(`${result.action.padEnd(7)} ${result.name}${suffix}`);
+    console.log(`${result.action.padEnd(7)} ${result.name || result.relativePath}${suffix}`);
   }
 }
 
@@ -621,12 +678,51 @@ async function loadExtensions(root) {
       if (!entry.isDirectory()) continue;
       const manifestPath = path.join(extRoot, entry.name, "extension.yaml");
       const manifest = await safeRead(manifestPath);
-      if (manifest) extensions.push(parseSimpleYaml(manifest));
+      if (manifest) {
+        const parsed = parseSimpleYaml(manifest);
+        parsed._directory = path.join("extensions", entry.name);
+        parsed._manifestPath = path.join("extensions", entry.name, "extension.yaml");
+        extensions.push(parsed);
+      }
     }
     return extensions;
   } catch {
     return [];
   }
+}
+
+async function evaluateExtensionGates(root) {
+  const blockers = [];
+  const concerns = [];
+  const context = await extensionContext(root);
+  const extensions = await loadExtensions(root);
+
+  for (const extension of extensions) {
+    const outputs = asArray(extension.outputs);
+    const required = extensionIsRequired(extension, context);
+
+    if (required && outputs.length === 0) {
+      blockers.push(`${extension.name || extension._directory} is required but declares no outputs.`);
+      continue;
+    }
+
+    for (const output of outputs) {
+      const target = path.join(root, output);
+      const existsOutput = await exists(target);
+      const content = existsOutput ? await safeRead(target) : "";
+
+      if (required && !existsOutput) {
+        blockers.push(`${extension.name || extension._directory} is required but missing output: ${output}`);
+        continue;
+      }
+
+      if (existsOutput && outputGateStatus(content) === "BLOCKED") {
+        blockers.push(`${extension.name || extension._directory} output is BLOCKED: ${output}`);
+      }
+    }
+  }
+
+  return { blockers, concerns };
 }
 
 async function runExtensionHook(root, hook) {
@@ -647,6 +743,61 @@ async function runExtensionHook(root, hook) {
     }
   }
   if (ran === 0) console.log(`no extensions registered for ${hook}`);
+}
+
+async function extensionContext(root) {
+  const files = [
+    "docs/product/product-passport.yaml",
+    "docs/product/prd.md",
+    "docs/product/data-api-contract.md",
+    "docs/architecture.md"
+  ];
+  const chunks = [];
+  for (const file of files) {
+    chunks.push(await safeRead(path.join(root, file)));
+  }
+  return normalizeText(chunks.join("\n"));
+}
+
+function extensionIsRequired(extension, context) {
+  const requiredWhen = extension.required_when;
+  if (!requiredWhen || typeof requiredWhen !== "object") return false;
+  const flags = asArray(requiredWhen.risk_flags);
+  if (flags.length === 0) return false;
+  return flags.some((flag) => contextMatchesRiskFlag(context, flag));
+}
+
+function contextMatchesRiskFlag(context, flag) {
+  const normalizedFlag = normalizeText(flag);
+  const aliases = {
+    auth: ["auth", "authentication", "login", "sign in", "role based access", "rbac"],
+    authorization: ["authorization", "permission", "permissions", "role based", "rbac"],
+    payment: ["payment", "payments", "billing", "tuition", "invoice", "checkout"],
+    sensitive_data: ["sensitive data", "personal data", "privacy", "pii", "student data", "customer data"],
+    personal_data: ["personal data", "privacy", "pii", "student data", "customer data"]
+  };
+  const terms = aliases[normalizedFlag.replaceAll(" ", "_")] || [normalizedFlag];
+  return terms.some((term) => context.includes(normalizeText(term)));
+}
+
+function outputGateStatus(content) {
+  const match = content.match(/##?\s*Gate Status\s*:?\s*\n?\s*([A-Z_]+)/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function asArray(value) {
+  if (Array.isArray(value)) return value.filter((item) => item !== undefined && item !== null);
+  if (value === undefined || value === null || value === "") return [];
+  return [value];
 }
 
 function extensionOutputTemplate(extension, hook, output) {

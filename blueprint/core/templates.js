@@ -310,7 +310,47 @@ evidence: []
   ".blueprint/memory/decisions.index.json": `[]\n`,
   ".blueprint/memory/artifact-index.json": `[]\n`,
   ".blueprint/memory/agent-handoffs.json": `[]\n`,
-  ".blueprint/context-packets/.gitkeep": ""
+  ".blueprint/context-packets/.gitkeep": "",
+  "extensions/security-threat-model/extension.yaml": `name: security-threat-model
+type: gate
+version: 0.1.0
+runs_on:
+  - before_readiness
+required_when:
+  risk_flags:
+    - auth
+    - authorization
+    - payment
+    - sensitive_data
+outputs:
+  - docs/security/threat-model.md
+owner: risk-reviewer-agent
+`,
+  "extensions/security-threat-model/README.md": `# Security Threat Model Extension
+
+Runs before readiness when the product touches auth, authorization, payment, or sensitive data.
+
+The output must not stay BLOCKED when implementation begins.
+`,
+  "extensions/privacy-impact-assessment/extension.yaml": `name: privacy-impact-assessment
+type: gate
+version: 0.1.0
+runs_on:
+  - before_readiness
+required_when:
+  risk_flags:
+    - personal_data
+    - sensitive_data
+outputs:
+  - docs/privacy/privacy-impact-assessment.md
+owner: risk-reviewer-agent
+`,
+  "extensions/privacy-impact-assessment/README.md": `# Privacy Impact Assessment Extension
+
+Runs before readiness when the product stores or processes personal or sensitive data.
+
+The output must not stay BLOCKED when implementation begins.
+`
 };
 
 export const githubTemplates = {
@@ -355,7 +395,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npx -y github:dailam148i-IT/Software-Blueprint-Harness check --strict
+      - run: npx -y github:dailam148i-IT/Software-Blueprint-Harness check
 `
 };
 

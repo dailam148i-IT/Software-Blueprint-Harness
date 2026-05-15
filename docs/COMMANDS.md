@@ -30,6 +30,8 @@ Options:
 | `--with-github` | Add GitHub workflow and PR template. |
 | `--with-examples` | Add demo examples. |
 
+`init` also ensures `.gitignore` contains `refs/vendor/` and `refs/REFS_LOCK.json` so synced reference repositories are not committed by accident.
+
 ## `blueprint status`
 
 Summarizes project stage, track, risk, readiness, and required artifacts.
@@ -40,7 +42,7 @@ blueprint status
 
 ## `blueprint check`
 
-Checks required structure.
+Checks required structure and reports immature placeholder content as concerns. With `--strict`, concerns also produce a non-zero exit code.
 
 ```bash
 blueprint check
@@ -49,7 +51,7 @@ blueprint check --strict
 
 ## `blueprint readiness`
 
-Generates or updates `docs/readiness-review.md`.
+Generates or updates `docs/readiness-review.md`. Readiness treats placeholder product docs, placeholder story packets, missing story matrix rows, missing required extension outputs, and extension outputs marked `BLOCKED` as blockers.
 
 ```bash
 blueprint readiness
@@ -115,7 +117,10 @@ Exports story packets into GitHub issue markdown files. With `--use-gh`, it call
 ```bash
 blueprint github create-issues
 blueprint github create-issues --use-gh --repo owner/name
+blueprint github create-issues --use-gh --repo owner/name --force
 ```
+
+The command writes `.blueprint/github/issues.index.json` to avoid duplicate issue creation on repeated `--use-gh` runs.
 
 ## `blueprint refs sync`
 

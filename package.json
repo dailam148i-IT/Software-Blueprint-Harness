@@ -1,6 +1,6 @@
 {
   "name": "software-blueprint-harness",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Documentation-first software delivery harness for humans, agents, and multi-agent development teams.",
   "type": "module",
   "bin": {
@@ -22,7 +22,7 @@
     "architecture",
     "multi-agent"
   ],
-  "author": "",
+  "author": "dailam148i-IT",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
