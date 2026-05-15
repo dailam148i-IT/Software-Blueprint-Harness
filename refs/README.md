@@ -8,4 +8,11 @@ Reference repositories and methods used to shape this harness:
 - https://github.com/Imbad0202/academic-research-skills-codex
 - https://github.com/JuliusBrussee/caveman
 
-The first publish keeps references as links so the package remains small. Future work can add a script to clone these repos into `refs/` on demand.
+The package keeps references as links so git history stays small. To clone them locally on demand:
+
+```bash
+blueprint refs sync --dry-run
+blueprint refs sync
+```
+
+Cloned repositories live in `refs/vendor/`, which is ignored by git.

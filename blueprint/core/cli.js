@@ -1,7 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { templates, exampleTemplates, githubTemplates } from "./templates.js";
+import { parseSimpleYaml, stringifySimpleYaml } from "./simple-yaml.js";
+import { validateProject } from "./validation.js";
+import { syncReferences } from "./refs.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +47,9 @@ const COMMANDS = new Set([
   "export-context",
   "memory",
   "extension",
-  "integration"
+  "integration",
+  "github",
+  "refs"
 ]);
 
 export async function runCli(argv) {
@@ -89,6 +95,12 @@ export async function runCli(argv) {
     case "integration":
       await commandIntegration(rest);
       return;
+    case "github":
+      await commandGithub(rest);
+      return;
+    case "refs":
+      await commandRefs(rest);
+      return;
   }
 }
 
@@ -105,8 +117,14 @@ Usage:
   blueprint new-decision "Decision title" [--directory <path>]
   blueprint export-context US-001 [--agent developer-agent] [--directory <path>]
   blueprint memory show [--directory <path>]
+  blueprint memory update [--directory <path>]
+  blueprint memory compact [--directory <path>]
   blueprint extension create <name> [--directory <path>]
+  blueprint extension list [--directory <path>]
+  blueprint extension run <hook> [--directory <path>]
   blueprint integration add github [--directory <path>]
+  blueprint github create-issues [--directory <path>] [--use-gh] [--repo owner/name]
+  blueprint refs sync [--directory <path>] [--dry-run] [--force]
 
 Principle:
   No implementation before readiness says READY_FOR_IMPLEMENTATION.
@@ -254,65 +272,44 @@ async function commandStatus(options) {
 
 async function commandCheck(options) {
   const root = resolveDirectory(options);
-  const rows = await artifactRows(root);
-  const missing = rows.filter((row) => !row.exists);
-  const concerns = [];
-  const passportPath = path.join(root, "docs/product/product-passport.yaml");
-  const passport = await safeRead(passportPath);
+  const result = await validateProject(root, REQUIRED_ARTIFACTS);
+  const missing = result.missing;
+  const concerns = result.concerns;
+  const failures = result.failures;
 
-  for (const field of [
-    "product_name:",
-    "product_type:",
-    "target_users:",
-    "in_scope:",
-    "out_of_scope:",
-    "risk_level:",
-    "chosen_track:",
-    "current_stage:",
-    "readiness_status:"
-  ]) {
-    if (passport && !passport.includes(field)) {
-      concerns.push(`product-passport missing field marker ${field}`);
-    }
-  }
-
-  const storiesDir = path.join(root, "docs/stories");
-  const stories = await listMarkdown(storiesDir);
-  if (stories.length === 0) {
-    concerns.push("no story packets yet");
-  }
-
-  if (missing.length === 0 && concerns.length === 0) {
+  if (missing.length === 0 && concerns.length === 0 && failures.length === 0) {
     console.log("PASS blueprint structural check");
     return;
   }
 
   const strict = Boolean(options.strict);
-  console.log(strict ? "FAIL blueprint structural check" : "PASS_WITH_CONCERNS blueprint structural check");
-  for (const item of missing) {
-    console.log(`missing ${item.path}`);
-  }
+  const hasFailures = missing.length > 0 || failures.length > 0;
+  console.log(strict || hasFailures ? "FAIL blueprint structural check" : "PASS_WITH_CONCERNS blueprint structural check");
+  for (const item of missing) console.log(`missing ${item}`);
+  for (const item of failures) console.log(`failure ${item}`);
   for (const item of concerns) {
     console.log(`concern ${item}`);
   }
 
-  if (strict && (missing.length > 0 || concerns.length > 0)) {
+  if ((strict && (missing.length > 0 || concerns.length > 0 || failures.length > 0)) || hasFailures) {
     process.exitCode = 1;
   }
 }
 
 async function commandReadiness(options) {
   const root = resolveDirectory(options);
-  const rows = await artifactRows(root);
-  const missing = rows.filter((row) => !row.exists);
+  const result = await validateProject(root, REQUIRED_ARTIFACTS);
+  const missing = result.missing;
+  const failures = result.failures;
   const stories = await listMarkdown(path.join(root, "docs/stories"));
   const matrix = await safeRead(path.join(root, "docs/TEST_MATRIX.md"));
   const blockers = [];
   const concerns = [];
 
   if (missing.length > 0) {
-    blockers.push(`Missing required artifacts: ${missing.map((row) => row.path).join(", ")}`);
+    blockers.push(`Missing required artifacts: ${missing.join(", ")}`);
   }
+  blockers.push(...failures);
   if (stories.length === 0) {
     blockers.push("No implementation story packets exist.");
   }
@@ -425,11 +422,21 @@ ${await readText(storyFile)}
 async function commandMemory(args) {
   const subcommand = args[0] || "show";
   const options = parseOptions(args.slice(1));
-  if (subcommand !== "show") {
-    throw new Error("only `blueprint memory show` is available in v1.");
-  }
   const root = resolveDirectory(options);
   const memoryPath = path.join(root, ".blueprint/memory/project-memory.yaml");
+  if (subcommand === "update") {
+    await updateMemory(root);
+    console.log("updated .blueprint/memory/project-memory.yaml");
+    return;
+  }
+  if (subcommand === "compact") {
+    await compactMemory(root);
+    console.log("created .blueprint/memory/compact-context.md");
+    return;
+  }
+  if (subcommand !== "show") {
+    throw new Error("use `blueprint memory show|update|compact`.");
+  }
   const memory = await safeRead(memoryPath);
   console.log(memory || "No project memory found. Run `blueprint init` first.");
 }
@@ -437,8 +444,21 @@ async function commandMemory(args) {
 async function commandExtension(args) {
   const subcommand = args[0];
   const options = parseOptions(args.slice(1));
+  if (subcommand === "list") {
+    const root = resolveDirectory(options);
+    for (const ext of await loadExtensions(root)) {
+      console.log(`${ext.name} (${ext.type}) hooks=${(ext.runs_on || []).join(",")}`);
+    }
+    return;
+  }
+  if (subcommand === "run") {
+    const hook = options._[0];
+    if (!hook) throw new Error("extension run requires a hook name.");
+    await runExtensionHook(resolveDirectory(options), hook);
+    return;
+  }
   if (subcommand !== "create") {
-    throw new Error("use `blueprint extension create <name>`.");
+    throw new Error("use `blueprint extension list|create <name>|run <hook>`.");
   }
   const name = options._[0];
   if (!name) {
@@ -469,6 +489,58 @@ async function commandIntegration(args) {
   printWriteResults(root, results, options);
 }
 
+async function commandGithub(args) {
+  const subcommand = args[0];
+  const options = parseOptions(args.slice(1));
+  if (subcommand !== "create-issues") {
+    throw new Error("use `blueprint github create-issues [--use-gh] [--repo owner/name]`.");
+  }
+  const root = resolveDirectory(options);
+  const outDir = path.join(root, ".blueprint/github/issues");
+  await fs.mkdir(outDir, { recursive: true });
+  const storiesDir = path.join(root, "docs/stories");
+  const stories = await listMarkdown(storiesDir);
+  for (const story of stories) {
+    const storyPath = path.join(storiesDir, story);
+    const text = await readText(storyPath);
+    const id = story.match(/US-\d{3}/)?.[0] || story.replace(/\.md$/, "");
+    const title = text.split(/\r?\n/)[0].replace(/^#\s*/, "");
+    const body = `# ${title}
+
+Generated from ${path.relative(root, storyPath).replaceAll("\\", "/")}.
+
+${text}
+`;
+    const bodyFile = path.join(outDir, `${id}.md`);
+    await fs.writeFile(bodyFile, body, "utf8");
+    console.log(`created ${path.relative(root, bodyFile).replaceAll("\\", "/")}`);
+    if (options["use-gh"]) {
+      const ghArgs = ["issue", "create", "--title", title, "--body-file", bodyFile];
+      if (options.repo) ghArgs.push("--repo", options.repo);
+      await runCommand("gh", ghArgs);
+    }
+  }
+}
+
+async function commandRefs(args) {
+  const subcommand = args[0];
+  const options = parseOptions(args.slice(1));
+  if (subcommand !== "sync") {
+    throw new Error("use `blueprint refs sync [--dry-run] [--force]`.");
+  }
+  const targetRoot = resolveDirectory(options);
+  const results = await syncReferences({
+    repoRoot,
+    targetRoot,
+    dryRun: Boolean(options["dry-run"]),
+    force: Boolean(options.force)
+  });
+  for (const result of results) {
+    const suffix = result.reason ? ` (${result.reason})` : "";
+    console.log(`${result.action.padEnd(7)} ${result.name}${suffix}`);
+  }
+}
+
 async function artifactRows(root) {
   const rows = [];
   for (const artifact of REQUIRED_ARTIFACTS) {
@@ -483,6 +555,130 @@ async function safeRead(filePath) {
   } catch {
     return "";
   }
+}
+
+async function updateMemory(root) {
+  const passportText = await safeRead(path.join(root, "docs/product/product-passport.yaml"));
+  const passport = passportText ? parseSimpleYaml(passportText) : {};
+  const stories = await listMarkdown(path.join(root, "docs/stories"));
+  const decisions = await listMarkdown(path.join(root, "docs/decisions"));
+  const artifactRowsValue = await artifactRows(root);
+  const memory = {
+    product: {
+      name: passport.product_name || "TBD",
+      type: passport.product_type || "TBD",
+      source: "docs/product/product-passport.yaml"
+    },
+    decisions: decisions.map((file) => ({ file: `docs/decisions/${file}` })),
+    progress: {
+      stage: passport.current_stage || "UNKNOWN",
+      readiness: passport.readiness_status || "UNKNOWN",
+      story_count: stories.length
+    },
+    artifacts: artifactRowsValue.map((row) => ({ path: row.path, exists: row.exists })),
+    agent_handoffs: [],
+    evidence: []
+  };
+  await fs.mkdir(path.join(root, ".blueprint/memory"), { recursive: true });
+  await fs.writeFile(path.join(root, ".blueprint/memory/project-memory.yaml"), stringifySimpleYaml(memory), "utf8");
+  await fs.writeFile(path.join(root, ".blueprint/memory/artifact-index.json"), JSON.stringify(memory.artifacts, null, 2), "utf8");
+  await fs.writeFile(path.join(root, ".blueprint/memory/decisions.index.json"), JSON.stringify(memory.decisions, null, 2), "utf8");
+}
+
+async function compactMemory(root) {
+  await updateMemory(root);
+  const passportText = await safeRead(path.join(root, "docs/product/product-passport.yaml"));
+  const readiness = await safeRead(path.join(root, "docs/readiness-review.md"));
+  const stories = await listMarkdown(path.join(root, "docs/stories"));
+  const compact = `# Compact Context
+
+## Product Passport
+${passportText}
+
+## Readiness
+${readiness.split(/\r?\n/).slice(0, 40).join("\n")}
+
+## Stories
+${stories.map((story) => `- docs/stories/${story}`).join("\n") || "- None"}
+
+## Do Not Compress Away
+- Commands
+- Paths
+- API/schema contracts
+- Acceptance criteria
+- Security/privacy warnings
+`;
+  await fs.mkdir(path.join(root, ".blueprint/memory"), { recursive: true });
+  await fs.writeFile(path.join(root, ".blueprint/memory/compact-context.md"), compact, "utf8");
+}
+
+async function loadExtensions(root) {
+  const extRoot = path.join(root, "extensions");
+  try {
+    const entries = await fs.readdir(extRoot, { withFileTypes: true });
+    const extensions = [];
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const manifestPath = path.join(extRoot, entry.name, "extension.yaml");
+      const manifest = await safeRead(manifestPath);
+      if (manifest) extensions.push(parseSimpleYaml(manifest));
+    }
+    return extensions;
+  } catch {
+    return [];
+  }
+}
+
+async function runExtensionHook(root, hook) {
+  const extensions = await loadExtensions(root);
+  let ran = 0;
+  for (const extension of extensions) {
+    if (!Array.isArray(extension.runs_on) || !extension.runs_on.includes(hook)) continue;
+    ran += 1;
+    for (const output of extension.outputs || []) {
+      const target = path.join(root, output);
+      if (await exists(target)) {
+        console.log(`skip    ${output} (exists)`);
+        continue;
+      }
+      await fs.mkdir(path.dirname(target), { recursive: true });
+      await fs.writeFile(target, extensionOutputTemplate(extension, hook, output), "utf8");
+      console.log(`create  ${output}`);
+    }
+  }
+  if (ran === 0) console.log(`no extensions registered for ${hook}`);
+}
+
+function extensionOutputTemplate(extension, hook, output) {
+  return `# ${extension.name}
+
+Hook: ${hook}
+Output: ${output}
+Generated: ${new Date().toISOString()}
+
+## Purpose
+Document the review, gate, or artifact required by this extension.
+
+## Findings
+- TBD
+
+## Gate Status
+BLOCKED
+
+## Required Before Proceeding
+- Complete this artifact.
+`;
+}
+
+function runCommand(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: "inherit" });
+    child.on("exit", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${command} ${args.join(" ")} failed with exit code ${code}`));
+    });
+    child.on("error", reject);
+  });
 }
 
 function analyzeProject(root, passport, status) {
@@ -619,7 +815,8 @@ runs_on:
   - before_readiness
 required_when:
   risk_flags: []
-outputs: []
+outputs:
+  - docs/extensions/${slugify(name)}.md
 permissions:
   - read_docs
   - write_docs

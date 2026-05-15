@@ -73,6 +73,54 @@ Each agent packet should define:
 - validation proof
 - handoff target
 
+## Common Workflow: Sync Reference Repositories
+
+The framework keeps reference repos out of git history by default. Clone them locally when you need to inspect source material:
+
+```bash
+blueprint refs sync --dry-run
+blueprint refs sync
+```
+
+References are cloned into:
+
+```text
+refs/vendor/
+```
+
+The conceptual mapping lives in:
+
+```text
+docs/REFERENCE_SYNTHESIS.md
+```
+
+## Common Workflow: Run Extension Hooks
+
+Extensions are real hook-driven artifacts. For example:
+
+```bash
+blueprint extension create security-threat-model
+blueprint extension run before_readiness
+```
+
+If an extension declares outputs, the hook runner creates those docs unless they already exist.
+
+## Common Workflow: Export GitHub Issues
+
+After stories exist:
+
+```bash
+blueprint github create-issues
+```
+
+This creates issue markdown under:
+
+```text
+.blueprint/github/issues/
+```
+
+Use `--use-gh` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown.
+
 ## What The AI Should Ask
 
 The AI should ask about preferences that cannot be researched:

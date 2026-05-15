@@ -8,7 +8,8 @@
   },
   "scripts": {
     "doctor": "node bin/blueprint.js doctor",
-    "check": "node bin/blueprint.js check",
+    "check": "node --test test/cli.test.js",
+    "test": "node --test test/cli.test.js",
     "test:init": "node bin/blueprint.js init --directory ./tmp-test --yes --with-github --with-examples"
   },
   "keywords": [

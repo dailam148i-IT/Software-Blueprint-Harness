@@ -50,8 +50,13 @@ blueprint new-story "Create student profile"
 blueprint new-decision "Choose Next.js and PostgreSQL"
 blueprint export-context US-001 --agent developer-agent
 blueprint memory show
+blueprint memory update
+blueprint memory compact
 blueprint extension create security-threat-model
+blueprint extension run before_readiness
 blueprint integration add github
+blueprint github create-issues
+blueprint refs sync --dry-run
 ```
 
 ## Documentation

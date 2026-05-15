@@ -1,0 +1,29 @@
+{
+  "references": [
+    {
+      "name": "harness-experimental",
+      "url": "https://github.com/hoangnb24/harness-experimental.git",
+      "role": "Agent harness, docs-as-agent-API, feature intake, story packets, test matrix, memory, context packets."
+    },
+    {
+      "name": "BMAD-METHOD",
+      "url": "https://github.com/bmad-code-org/BMAD-METHOD.git",
+      "role": "Analysis, planning, solutioning, implementation lifecycle and role handoffs."
+    },
+    {
+      "name": "academic-research-skills",
+      "url": "https://github.com/Imbad0202/academic-research-skills.git",
+      "role": "Research pipeline, integrity gates, review/revise traceability."
+    },
+    {
+      "name": "academic-research-skills-codex",
+      "url": "https://github.com/Imbad0202/academic-research-skills-codex.git",
+      "role": "Codex-oriented research suite packaging."
+    },
+    {
+      "name": "caveman",
+      "url": "https://github.com/JuliusBrussee/caveman.git",
+      "role": "Context compression, concise agent-facing docs, multi-tool skill distribution."
+    }
+  ]
+}

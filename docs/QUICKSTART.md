@@ -92,3 +92,20 @@ READY_FOR_IMPLEMENTATION
 ```
 
 If the status is `FAIL`, fix blockers first.
+
+## 7. Optional: Sync References
+
+```bash
+blueprint refs sync --dry-run
+blueprint refs sync
+```
+
+This clones the source method repos into `refs/vendor/` for local study.
+
+## 8. Optional: Export GitHub Issues
+
+```bash
+blueprint github create-issues
+```
+
+This converts story packets into issue markdown under `.blueprint/github/issues/`.

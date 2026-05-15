@@ -86,14 +86,18 @@ Prints project memory.
 
 ```bash
 blueprint memory show
+blueprint memory update
+blueprint memory compact
 ```
 
 ## `blueprint extension create`
 
-Creates an extension skeleton.
+Creates, lists, or runs extensions.
 
 ```bash
 blueprint extension create security-threat-model
+blueprint extension list
+blueprint extension run before_readiness
 ```
 
 ## `blueprint integration add github`
@@ -102,4 +106,23 @@ Installs GitHub PR and CI templates.
 
 ```bash
 blueprint integration add github
+```
+
+## `blueprint github create-issues`
+
+Exports story packets into GitHub issue markdown files. With `--use-gh`, it calls `gh issue create`, so GitHub CLI must be installed and authenticated.
+
+```bash
+blueprint github create-issues
+blueprint github create-issues --use-gh --repo owner/name
+```
+
+## `blueprint refs sync`
+
+Clones the reference repositories listed in `refs/catalog.json` into `refs/vendor/`.
+
+```bash
+blueprint refs sync --dry-run
+blueprint refs sync
+blueprint refs sync --force
 ```
