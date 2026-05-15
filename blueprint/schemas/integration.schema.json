@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Integration",
+  "type": "object",
+  "required": ["name", "version", "provider", "commands"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "provider": { "type": "string" },
+    "commands": { "type": "array", "items": { "type": "string" } },
+    "required_permissions": { "type": "array", "items": { "type": "string" } }
+  }
+}

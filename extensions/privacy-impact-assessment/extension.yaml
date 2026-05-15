@@ -1,0 +1,14 @@
+name: privacy-impact-assessment
+version: 0.1.0
+type: quality-gate-extension
+runs_on:
+  - before_readiness
+required_when:
+  risk_flags:
+    - personal_data
+    - sensitive_data
+outputs:
+  - docs/privacy/privacy-impact-assessment.md
+permissions:
+  - read_docs
+  - write_docs

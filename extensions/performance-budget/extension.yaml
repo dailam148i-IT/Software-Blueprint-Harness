@@ -1,0 +1,13 @@
+name: performance-budget
+version: 0.1.0
+type: quality-gate-extension
+runs_on:
+  - before_readiness
+required_when:
+  product_surfaces:
+    - web
+outputs:
+  - docs/quality/performance-budget.md
+permissions:
+  - read_docs
+  - write_docs

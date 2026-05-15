@@ -1,0 +1,12 @@
+name: github
+version: 0.1.0
+provider: github
+commands:
+  - integration add github
+  - github create-issues
+  - github create-pr-template
+  - github sync-status
+required_permissions:
+  - contents:read
+  - issues:write
+  - pull_requests:write

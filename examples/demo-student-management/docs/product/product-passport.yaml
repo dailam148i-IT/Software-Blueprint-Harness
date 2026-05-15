@@ -1,0 +1,34 @@
+product_name: Student Management System
+product_type: web_admin_app
+target_users:
+  - admin
+  - teacher
+problem: Training centers need one place to manage students, classes, attendance, and tuition.
+desired_outcome: Staff can manage student operations with clear roles and reliable records.
+in_scope:
+  - authentication
+  - role-based access
+  - student profiles
+  - classes
+  - attendance
+  - tuition tracking
+out_of_scope:
+  - parent mobile app
+  - full LMS
+  - online payment in MVP
+success_metrics:
+  - reduce spreadsheet usage
+  - reduce duplicate student records
+constraints:
+  - protect personal data
+risk_level: high
+chosen_track: enterprise
+tech_preferences:
+  - Next.js
+  - PostgreSQL
+  - Prisma
+external_dependencies: []
+security_privacy_notes:
+  - role-based access required
+current_stage: PRODUCT_READY
+readiness_status: CONCERNS

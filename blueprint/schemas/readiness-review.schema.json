@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Readiness Review",
+  "type": "object",
+  "required": ["status", "blockers", "concerns", "required_before_code"],
+  "properties": {
+    "status": {
+      "enum": ["READY_FOR_IMPLEMENTATION", "PASS_WITH_CONCERNS", "FAIL", "BLOCKED", "NOT_READY"]
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "concerns": { "type": "array", "items": { "type": "string" } },
+    "required_before_code": { "type": "array", "items": { "type": "string" } }
+  }
+}

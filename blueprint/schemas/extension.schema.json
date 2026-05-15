@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Extension",
+  "type": "object",
+  "required": ["name", "version", "type", "runs_on"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "type": {
+      "enum": [
+        "workflow-extension",
+        "artifact-extension",
+        "integration-extension",
+        "agent-extension",
+        "quality-gate-extension"
+      ]
+    },
+    "runs_on": { "type": "array", "items": { "type": "string" } },
+    "required_when": { "type": "object" },
+    "outputs": { "type": "array", "items": { "type": "string" } },
+    "permissions": { "type": "array", "items": { "type": "string" } }
+  }
+}

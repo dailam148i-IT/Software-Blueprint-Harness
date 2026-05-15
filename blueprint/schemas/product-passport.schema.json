@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product Passport",
+  "type": "object",
+  "required": [
+    "product_name",
+    "product_type",
+    "target_users",
+    "problem",
+    "in_scope",
+    "out_of_scope",
+    "risk_level",
+    "chosen_track",
+    "current_stage",
+    "readiness_status"
+  ],
+  "properties": {
+    "product_name": { "type": "string" },
+    "product_type": { "type": "string" },
+    "target_users": { "type": "array", "items": { "type": "string" } },
+    "problem": { "type": "string" },
+    "desired_outcome": { "type": "string" },
+    "in_scope": { "type": "array", "items": { "type": "string" } },
+    "out_of_scope": { "type": "array", "items": { "type": "string" } },
+    "success_metrics": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "risk_level": { "enum": ["tiny", "normal", "high"] },
+    "chosen_track": { "enum": ["quick", "standard", "enterprise"] },
+    "current_stage": { "type": "string" },
+    "readiness_status": { "type": "string" }
+  }
+}

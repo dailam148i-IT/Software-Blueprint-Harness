@@ -1,0 +1,10 @@
+name: my-extension
+version: 0.1.0
+type: workflow-extension
+runs_on:
+  - before_readiness
+required_when: {}
+outputs: []
+permissions:
+  - read_docs
+  - write_docs

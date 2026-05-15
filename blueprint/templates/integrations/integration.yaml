@@ -1,0 +1,5 @@
+name: my-integration
+version: 0.1.0
+provider: provider-name
+commands: []
+required_permissions: []

@@ -1,0 +1,12 @@
+name: cost-estimation
+version: 0.1.0
+type: artifact-extension
+runs_on:
+  - after_solution
+required_when:
+  external_dependencies: []
+outputs:
+  - docs/operations/cost-estimate.md
+permissions:
+  - read_docs
+  - write_docs

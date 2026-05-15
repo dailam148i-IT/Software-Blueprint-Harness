@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Memory",
+  "type": "object",
+  "required": ["product", "decisions", "progress", "agent_handoffs", "evidence"],
+  "properties": {
+    "product": { "type": "object" },
+    "decisions": { "type": "array" },
+    "progress": { "type": "object" },
+    "agent_handoffs": { "type": "array" },
+    "evidence": { "type": "array" }
+  }
+}

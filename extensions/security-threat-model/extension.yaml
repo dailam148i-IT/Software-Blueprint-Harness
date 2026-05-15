@@ -1,0 +1,16 @@
+name: security-threat-model
+version: 0.1.0
+type: quality-gate-extension
+runs_on:
+  - before_readiness
+required_when:
+  risk_flags:
+    - auth
+    - authorization
+    - sensitive_data
+    - payment
+outputs:
+  - docs/security/threat-model.md
+permissions:
+  - read_docs
+  - write_docs

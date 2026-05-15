@@ -1,0 +1,13 @@
+name: accessibility-review
+version: 0.1.0
+type: quality-gate-extension
+runs_on:
+  - before_readiness
+required_when:
+  product_surfaces:
+    - ui
+outputs:
+  - docs/quality/accessibility-review.md
+permissions:
+  - read_docs
+  - write_docs
