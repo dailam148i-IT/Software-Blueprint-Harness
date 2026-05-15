@@ -30,13 +30,16 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 1. Inspect existing `AGENTS.md`, `docs/`, `.blueprint/`, and `blueprint.config.yaml`.
 2. When the user says "nắm quy trình", read `AGENTS.md`, `docs/AGENT_BOOTSTRAP.md`, and `docs/SIMPLE_PROMPT_WORKFLOW.md`, then confirm the process briefly.
 3. When the user sends `/start <idea>`, prefer `blueprint start "<idea>"` or create the same intake package manually.
-4. Do not ask questions that can be answered from existing artifacts or research.
-5. For new input, run intake first.
-6. Ask only high-impact product or tradeoff questions.
-7. Create or update the smallest relevant artifacts.
-8. Stop for human approval before writing the full documentation set when the plan is not yet approved.
-9. Keep product docs, specs, stories, decisions, traceability, edge cases, test matrix, and memory aligned.
-10. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
+4. Read `docs/ARTIFACT_DEPTH_STANDARD.md` before writing the full documentation set.
+5. Use `docs/EXAMPLE_COMPARISON.md` to avoid shallow-but-plausible output.
+6. Use `docs/COMMERCE_RISK_PLAYBOOK.md` when payment, shipping, inventory, auth, provider, or privacy risk exists.
+7. Do not ask questions that can be answered from existing artifacts or research.
+8. For new input, run intake first.
+9. Ask only high-impact product or tradeoff questions.
+10. Create or update the smallest relevant artifacts.
+11. Stop for human approval before writing the full documentation set when the plan is not yet approved.
+12. Keep product docs, specs, stories, decisions, traceability, edge cases, test matrix, and memory aligned.
+13. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
 
 ## Gates
 
@@ -50,10 +53,14 @@ Block implementation when:
 - EDGE_CASE_MATRIX lacks required callback, timeout, refund/cancel, retry, dead-letter, or reconcile behavior where relevant.
 - TRACEABILITY_MATRIX does not map requirement -> spec -> story -> test -> evidence.
 - TEST_MATRIX lacks rows for core behavior.
+- TEST_MATRIX uses `yes/no`, `planned`, or `pending implementation` as proof instead of scenario IDs, commands, fixtures, and evidence paths.
+- PRD has no stable requirement IDs or acceptance criteria IDs.
+- Research is simulated/planned but treated as evidence.
+- Product Passport and `.blueprint/status.json` disagree on stage, risk, or readiness.
 - Risk reviewer has unresolved `FAIL`.
 - High-risk flags exist without the required security/privacy/data review.
 
-Run `blueprint lint --ci` before readiness when the CLI is available.
+Run `blueprint explain-fail`, `blueprint lint --ci`, and `blueprint readiness` before implementation when the CLI is available.
 
 ## Output Discipline
 

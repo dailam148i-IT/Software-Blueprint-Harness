@@ -58,7 +58,7 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
       }
     }
 
-    if (passport.risk_level && !["tiny", "normal", "high"].includes(passport.risk_level)) {
+    if (passport.risk_level && !["tiny", "normal", "high", "high-risk"].includes(passport.risk_level)) {
       failures.push(`Invalid risk_level: ${passport.risk_level}`);
     }
     if (passport.chosen_track && !["quick", "standard", "enterprise"].includes(passport.chosen_track)) {
@@ -104,11 +104,14 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
   if (matrix && matrix.includes("| TBD |")) {
     qualityIssues.push("TEST_MATRIX still contains placeholder TBD row.");
   }
+  validateTestMatrixDepth(matrix, qualityIssues);
 
   await validateTraceability(root, stories, qualityIssues);
   await validateEdgeCases(root, stories, qualityIssues);
   await validateStructuredSpecs(root, qualityIssues);
   await validateDocumentReadiness(root, qualityIssues);
+  await validateResearchDepth(root, qualityIssues);
+  await validateStatusConsistency(root, passport, qualityIssues);
 
   return { missing, concerns, failures, stories };
 }
@@ -122,7 +125,7 @@ async function validateDocumentReadiness(root, qualityIssues) {
     {
       path: "docs/product/prd.md",
       label: "PRD",
-      placeholders: ["## Problem", "## Users", "## Scope", "## Functional Requirements", "## Acceptance Criteria"]
+      placeholders: ["## Problem", "## Personas", "## Scope", "## Functional Requirements", "## Acceptance Criteria"]
     },
     {
       path: "docs/product/ux-spec.md",
@@ -174,7 +177,107 @@ async function validateDocumentReadiness(root, qualityIssues) {
         qualityIssues.push(`${document.label} section is empty or placeholder: ${heading}`);
       }
     }
+
+    if (document.label === "PRD") validatePrdDepth(text, qualityIssues);
+    if (document.label === "Data/API Contract") validateDataApiDepth(text, qualityIssues);
   }
+}
+
+function validatePrdDepth(text, qualityIssues) {
+  if (!/\bREQ-[A-Z0-9]+-\d{3}\b/.test(text)) {
+    qualityIssues.push("PRD has no stable requirement IDs such as REQ-ORDER-001.");
+  }
+  if (!/\bAC-[A-Z0-9]+-\d{3}\b/.test(text)) {
+    qualityIssues.push("PRD has no stable acceptance criteria IDs such as AC-ORDER-001.");
+  }
+  for (const section of ["## Personas", "## Business Rules", "## Scope By Release"]) {
+    if (!text.includes(section)) qualityIssues.push(`PRD missing depth section: ${section}.`);
+  }
+  if (!/Owner\s*\|.*Severity|Severity\s*\|.*Owner/i.test(text)) {
+    qualityIssues.push("PRD assumptions/open questions need owner and severity columns.");
+  }
+}
+
+function validateDataApiDepth(text, qualityIssues) {
+  for (const marker of [
+    "Request",
+    "Response",
+    "Status Code",
+    "Idempotency",
+    "Authorization",
+    "Event Payload"
+  ]) {
+    if (!text.includes(marker)) {
+      qualityIssues.push(`Data/API Contract missing implementation detail marker: ${marker}.`);
+    }
+  }
+}
+
+function validateTestMatrixDepth(matrix, qualityIssues) {
+  if (!matrix) return;
+  const normalized = normalizeText(matrix);
+  if (/\|\s*yes\s*\|\s*yes\s*\|\s*yes\s*\|/i.test(matrix) || /\|\s*no\s*\|\s*no\s*\|/i.test(matrix)) {
+    qualityIssues.push("TEST_MATRIX uses boolean yes/no cells instead of named scenarios and proof.");
+  }
+  if (normalized.includes("pending implementation")) {
+    qualityIssues.push("TEST_MATRIX evidence is still pending implementation.");
+  }
+  if (!/\bREQ-[A-Z0-9]+-\d{3}\b/.test(matrix)) {
+    qualityIssues.push("TEST_MATRIX has no requirement IDs.");
+  }
+  if (!/\bTC-[A-Z0-9]+-\d{3}\b/.test(matrix)) {
+    qualityIssues.push("TEST_MATRIX has no test scenario IDs.");
+  }
+  for (const heading of ["Command", "Fixture", "Evidence", "Owner"]) {
+    if (!matrix.includes(heading)) qualityIssues.push(`TEST_MATRIX missing column or marker: ${heading}.`);
+  }
+}
+
+async function validateResearchDepth(root, qualityIssues) {
+  const researchFiles = await listFiles(path.join(root, "docs/research"), ".md");
+  for (const file of researchFiles) {
+    const text = await readOptional(path.join(root, "docs/research", file));
+    if (/planned\/simulated|simulated for intake|evidence type:/i.test(text)) {
+      qualityIssues.push(`${file} appears to contain simulated research instead of source-backed evidence.`);
+    }
+    if (text && !/source inventory/i.test(text)) {
+      qualityIssues.push(`${file} missing source inventory.`);
+    }
+    if (text && !/claim map/i.test(text)) {
+      qualityIssues.push(`${file} missing claim map.`);
+    }
+  }
+}
+
+async function validateStatusConsistency(root, passport, qualityIssues) {
+  const statusText = await readOptional(path.join(root, ".blueprint/status.json"));
+  if (!statusText || !passport) return;
+  let status = null;
+  try {
+    status = JSON.parse(statusText);
+  } catch {
+    qualityIssues.push(".blueprint/status.json is not valid JSON.");
+    return;
+  }
+
+  const passportRisk = normalizeRisk(passport.risk_level);
+  const statusRisk = normalizeRisk(status.risk);
+  if (passportRisk && statusRisk && passportRisk !== statusRisk) {
+    qualityIssues.push(`Status drift: Product Passport risk_level is ${passport.risk_level}, but .blueprint/status.json risk is ${status.risk}.`);
+  }
+  if (passport.current_stage && status.stage && passport.current_stage !== status.stage) {
+    qualityIssues.push(`Status drift: Product Passport current_stage is ${passport.current_stage}, but .blueprint/status.json stage is ${status.stage}.`);
+  }
+  if (passport.readiness_status && status.readiness && passport.readiness_status !== status.readiness) {
+    qualityIssues.push(`Status drift: Product Passport readiness_status is ${passport.readiness_status}, but .blueprint/status.json readiness is ${status.readiness}.`);
+  }
+}
+
+function normalizeRisk(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace("high-risk", "high")
+    .trim();
 }
 
 async function validateTraceability(root, stories, qualityIssues) {

@@ -38,6 +38,10 @@ test("init creates harness and GitHub templates", async () => {
     assert.equal(await exists(path.join(root, "docs/specs/error-codes.yaml")), true);
     assert.equal(await exists(path.join(root, "docs/EDGE_CASE_MATRIX.md")), true);
     assert.equal(await exists(path.join(root, "docs/TRACEABILITY_MATRIX.md")), true);
+    assert.equal(await exists(path.join(root, "docs/ARTIFACT_DEPTH_STANDARD.md")), true);
+    assert.equal(await exists(path.join(root, "docs/EXAMPLE_COMPARISON.md")), true);
+    assert.equal(await exists(path.join(root, "docs/PROJECT_RECOVERY_GUIDE.md")), true);
+    assert.equal(await exists(path.join(root, "docs/COMMERCE_RISK_PLAYBOOK.md")), true);
     assert.equal(await exists(path.join(root, ".github/workflows/blueprint-check.yml")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/README.md")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/docs/EDGE_CASE_MATRIX.md")), true);
@@ -85,6 +89,98 @@ test("lint enforces production documentation gates", async () => {
     assert.match(output, /Product Passport field is not implementation-ready/i);
     assert.match(output, /TRACEABILITY_MATRIX still contains placeholder rows/i);
     assert.match(output, /State machine spec still contains placeholder/i);
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
+  });
+});
+
+test("explain-fail prints actionable repair checklist", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const output = await capture(() => runCli(["explain-fail", "--directory", root]));
+    assert.match(output, /Blueprint Repair Checklist/);
+    assert.match(output, /blueprint init --directory \. --yes --merge/);
+    assert.match(output, /repair:/);
+  });
+});
+
+test("lint catches shallow PRD, boolean test matrix, simulated research, and status drift", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    await fs.writeFile(
+      path.join(root, "docs/product/product-passport.yaml"),
+      `product_name: PetFoodVN
+product_type: ecommerce
+target_users:
+  - customer
+problem: Customers need checkout.
+desired_outcome: Launch checkout.
+in_scope:
+  - payment
+out_of_scope:
+  - wallet
+success_metrics:
+  - conversion
+constraints: []
+risk_level: high-risk
+chosen_track: standard
+tech_preferences: []
+external_dependencies:
+  - shipping provider
+security_privacy_notes:
+  - PII
+current_stage: STORY_READY
+readiness_status: NOT_READY
+`,
+      "utf8"
+    );
+    await fs.writeFile(
+      path.join(root, "docs/product/prd.md"),
+      `# Product Requirements Document
+
+## Problem
+Customers need checkout.
+
+## Users
+Customers and admins.
+
+## Scope
+Checkout.
+
+## Functional Requirements
+1. Customers can checkout.
+
+## Non-Functional Requirements
+Fast enough.
+
+## Acceptance Criteria
+Checkout works.
+`,
+      "utf8"
+    );
+    await fs.writeFile(
+      path.join(root, "docs/TEST_MATRIX.md"),
+      `# Test Matrix
+
+| Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| US-001 | Checkout | yes | yes | yes | web | planned | pending implementation |
+`,
+      "utf8"
+    );
+    await fs.mkdir(path.join(root, "docs/research"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, "docs/research/synthesis.md"),
+      "# Research\n\n## Source Inventory (Planned/Simulated)\n\n## Claim Map\nEvidence type: market baseline\n",
+      "utf8"
+    );
+    const output = await capture(() => runCli(["lint", "--directory", root]));
+    assert.doesNotMatch(output, /Invalid risk_level: high-risk/);
+    assert.match(output, /PRD has no stable requirement IDs/i);
+    assert.match(output, /TEST_MATRIX uses boolean yes\/no cells/i);
+    assert.match(output, /pending implementation/i);
+    assert.match(output, /simulated research/i);
+    assert.match(output, /Status drift/i);
     assert.equal(process.exitCode, 1);
     process.exitCode = 0;
   });

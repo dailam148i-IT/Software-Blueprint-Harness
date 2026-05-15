@@ -76,6 +76,7 @@ blueprint init --directory . --yes
 blueprint start "I need to build a student management web app" --depth deep
 blueprint status
 blueprint check
+blueprint explain-fail
 blueprint lint --ci
 blueprint readiness
 blueprint new-story "Create student profile"
@@ -105,6 +106,10 @@ Use `blueprint lint --ci` when you want the production-grade pre-code gate: no c
 - [Simple Prompt Workflow](docs/SIMPLE_PROMPT_WORKFLOW.md)
 - [Usage Guide](docs/USAGE.md)
 - [CLI Commands](docs/COMMANDS.md)
+- [Artifact Depth Standard](docs/ARTIFACT_DEPTH_STANDARD.md)
+- [Example Comparison](docs/EXAMPLE_COMPARISON.md)
+- [Project Recovery Guide](docs/PROJECT_RECOVERY_GUIDE.md)
+- [Commerce Risk Playbook](docs/COMMERCE_RISK_PLAYBOOK.md)
 - [Research Pipeline](docs/RESEARCH_PIPELINE.md)
 - [End-to-End Prompt Playbook](docs/PROMPTS_END_TO_END.md)
 - [Production V1 Bar](docs/PRODUCTION_V1.md)
@@ -123,6 +128,10 @@ docs/
   WORKFLOW.md
   FEATURE_INTAKE.md
   QUALITY_GATES.md
+  ARTIFACT_DEPTH_STANDARD.md
+  EXAMPLE_COMPARISON.md
+  PROJECT_RECOVERY_GUIDE.md
+  COMMERCE_RISK_PLAYBOOK.md
   SIMPLE_PROMPT_WORKFLOW.md
   RESEARCH_PIPELINE.md
   PROMPTS_END_TO_END.md

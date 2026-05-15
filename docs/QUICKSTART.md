@@ -33,6 +33,12 @@ concern no story packets yet
 
 That is normal. A fresh project has structure, but it is not implementation-ready.
 
+Read these before asking an agent to write full docs:
+
+- `docs/ARTIFACT_DEPTH_STANDARD.md`
+- `docs/EXAMPLE_COMPARISON.md`
+- `docs/COMMERCE_RISK_PLAYBOOK.md` for payment, shipping, inventory, auth, provider, or privacy risk
+
 ## 3. Start From A Raw Idea
 
 Example:
@@ -106,6 +112,7 @@ Give that packet to a coding agent instead of dumping the whole repo context.
 ## 6. Run Production Lint And Readiness
 
 ```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness explain-fail --directory .
 npx -y github:dailam148i-IT/Software-Blueprint-Harness lint --directory . --ci
 npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 ```

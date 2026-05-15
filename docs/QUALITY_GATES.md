@@ -28,6 +28,9 @@ Run:
 
 ```bash
 blueprint lint --ci
+blueprint explain-fail
 ```
 
 This gate checks that implementation-critical docs have no placeholders, machine-readable specs exist, edge-case rows are assigned, story packets have ownership and file boundaries, and every story maps to test/evidence expectations.
+
+The gate also rejects shallow artifacts: PRD without stable requirement IDs, test matrix with yes/no cells, simulated research treated as evidence, and status drift between Product Passport and `.blueprint/status.json`.

@@ -71,6 +71,15 @@ blueprint check
 blueprint check --strict
 ```
 
+## `blueprint explain-fail`
+
+Prints a repair checklist from the same production lint engine. Use it after a shallow or old project fails.
+
+```bash
+blueprint explain-fail
+blueprint explain-fail --directory .
+```
+
 ## `blueprint lint`
 
 Runs the production documentation gate. It checks placeholder-free product docs, machine-readable state/RBAC/error specs, integration protocol, story ownership, edge-case coverage, and traceability from requirement to story to test evidence.

@@ -28,32 +28,37 @@ do not code. Treat it as a blueprint-start request:
 3. docs/SIMPLE_PROMPT_WORKFLOW.md
 4. docs/HARNESS.md
 5. docs/FEATURE_INTAKE.md
-6. docs/product/product-passport.yaml
-7. docs/product/prd.md
-8. docs/architecture.md
-9. docs/product/data-api-contract.md
-10. docs/product/integration-protocol.md
-11. docs/specs/state-machines.yaml
-12. docs/specs/rbac.yaml
-13. docs/specs/error-codes.yaml
-14. docs/stories/
-15. docs/TRACEABILITY_MATRIX.md
-16. docs/EDGE_CASE_MATRIX.md
-17. docs/TEST_MATRIX.md
-18. docs/decisions/
-19. .blueprint/memory/project-memory.yaml
+6. docs/ARTIFACT_DEPTH_STANDARD.md
+7. docs/EXAMPLE_COMPARISON.md
+8. docs/COMMERCE_RISK_PLAYBOOK.md when payment, shipping, inventory, auth, or provider risk exists
+9. docs/product/product-passport.yaml
+10. docs/product/prd.md
+11. docs/architecture.md
+12. docs/product/data-api-contract.md
+13. docs/product/integration-protocol.md
+14. docs/specs/state-machines.yaml
+15. docs/specs/rbac.yaml
+16. docs/specs/error-codes.yaml
+17. docs/stories/
+18. docs/TRACEABILITY_MATRIX.md
+19. docs/EDGE_CASE_MATRIX.md
+20. docs/TEST_MATRIX.md
+21. docs/decisions/
+22. .blueprint/memory/project-memory.yaml
 
 ## Task Loop
 1. Classify the request: new spec, spec slice, change request, initiative, maintenance, or harness improvement.
 2. Choose lane: tiny, normal, or high-risk.
-3. Locate affected product docs, stories, decisions, and test matrix rows.
-4. Work only inside the selected story scope.
-5. Update docs, memory, decisions, test matrix, and evidence when behavior changes.
+3. Grade affected artifacts against docs/ARTIFACT_DEPTH_STANDARD.md.
+4. Locate affected product docs, specs, stories, decisions, edge cases, traceability, and test matrix rows.
+5. Work only inside the selected story scope.
+6. Update docs, memory, decisions, test matrix, traceability, edge cases, and evidence when behavior changes.
 
 ## Done Definition
 - Requested change completed or blocker documented.
 - Product truth remains current.
 - Validation expectations remain current.
+- Requirement IDs, acceptance criteria IDs, edge case IDs, and test scenario IDs remain traceable.
 - Evidence is linked when checks exist.
 - Final response says what changed and what was not attempted.
 `,
@@ -335,11 +340,11 @@ Implement only story <US-xxx>. Read the context packet. Stay in allowed scope. R
 `,
   "docs/TEST_MATRIX.md": `# Test Matrix
 
-This file maps product behavior to proof.
+This file maps product behavior to proof. Do not use boolean \`yes/no\` as proof.
 
-| Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TBD | Add rows when story packets are created | no | no | no | no | planned | none |
+| Requirement | Story | Scenario ID | Scenario | Test Type | Command | Fixture/Data | Expected Evidence | Owner | Status | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| REQ-TBD-001 | US-000 | TC-TBD-001 | Replace this row with a real scenario | unit/integration/e2e/platform | command to run | fixture path or seed data | docs/evidence/US-000.md#TC-TBD-001 | qa-agent | planned | docs/evidence/US-000.md |
 `,
   "docs/TRACEABILITY_MATRIX.md": `# Traceability Matrix
 
@@ -401,20 +406,50 @@ readiness_status: NOT_READY
 ## Problem
 TBD
 
-## Users
-TBD
+## Personas
+| Persona ID | User | Goal | Permissions | Pains | Success Moment |
+| --- | --- | --- | --- | --- | --- |
+| PER-TBD-001 | TBD | TBD | TBD | TBD | TBD |
 
 ## Scope
-TBD
+### MVP
+- TBD
+
+### Later
+- TBD
+
+### Explicitly Out Of Scope
+- TBD
+
+## Scope By Release
+| Release | Included | Excluded | Exit Criteria |
+| --- | --- | --- | --- |
+| MVP | TBD | TBD | TBD |
 
 ## Functional Requirements
-- TBD
+| Requirement | Priority | Requirement | Business Rule | Acceptance Criteria | Story | Risk |
+| --- | --- | --- | --- | --- | --- | --- |
+| REQ-TBD-001 | Must | TBD | TBD | AC-TBD-001 | US-000 | normal |
 
 ## Non-Functional Requirements
-- TBD
+| Requirement | Target | Measurement | Owner |
+| --- | --- | --- | --- |
+| NFR-TBD-001 | TBD | TBD | TBD |
+
+## Business Rules
+| Rule | Description | Owner | Source |
+| --- | --- | --- | --- |
+| BR-TBD-001 | TBD | TBD | TBD |
 
 ## Acceptance Criteria
-- TBD
+| Acceptance | Requirement | Given | When | Then | Negative Case | Test |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-TBD-001 | REQ-TBD-001 | TBD | TBD | TBD | TBD | TC-TBD-001 |
+
+## Assumptions And Open Questions
+| ID | Type | Item | Owner | Severity | Decision Needed By | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| OQ-TBD-001 | question | TBD | product-owner | high | before readiness | open |
 `,
   "docs/product/ux-spec.md": `# UX Spec
 
@@ -433,22 +468,38 @@ TBD
   "docs/product/data-api-contract.md": `# Data and API Contract
 
 ## Entities
-TBD
+| Entity | Fields | Constraints | Privacy Class | Owner |
+| --- | --- | --- | --- | --- |
+| EntityTBD | id | TBD | public/internal/personal/sensitive | data-api-agent |
 
 ## Commands
-TBD
+| Command | Request | Response | Status Code | Authorization | Idempotency | Emits | Errors |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CommandTBD | TBD | TBD | 200/201/400/401/403/409 | role/action | required/not-required | event.name | ERROR_CODE |
 
 ## Queries
-TBD
+| Query | Filters | Response | Pagination | Authorization | Errors |
+| --- | --- | --- | --- | --- | --- |
+| QueryTBD | TBD | TBD | TBD | role/action | ERROR_CODE |
 
 ## API / CLI / Events
-TBD
+| Surface | Method/Event | Path/Topic | Request or Event Payload | Response | Status Code | Auth |
+| --- | --- | --- | --- | --- | --- | --- |
+| HTTP | POST | /api/v1/tbd | TBD | TBD | 201 | TBD |
 
 ## Validation and Errors
-TBD
+Link canonical errors in docs/specs/error-codes.yaml.
+
+| Rule | Error Code | HTTP Status | Retryable | User Message |
+| --- | --- | --- | --- | --- |
+| TBD | ERROR_TBD | 400 | false | TBD |
 
 ## Permissions
-TBD
+Link canonical permissions in docs/specs/rbac.yaml.
+
+| Resource | Action | Allowed Roles | Audit Required | Deny Behavior |
+| --- | --- | --- | --- | --- |
+| TBD | TBD | TBD | true/false | ERROR_TBD |
 `,
   "docs/product/integration-protocol.md": `# Integration Protocol
 

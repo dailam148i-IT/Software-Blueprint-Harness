@@ -45,6 +45,8 @@ Recommended flow:
 
 The user should not be forced to choose technology immediately. First gather product intent, then research, then propose options and ask the user to approve.
 
+Before implementation, compare every artifact against `docs/ARTIFACT_DEPTH_STANDARD.md`. If the output feels like a good summary but cannot produce exact tests, exact state transitions, exact permissions, and exact evidence paths, it is still shallow.
+
 ## Common Workflow: Change Request
 
 For a change request:
@@ -139,6 +141,23 @@ The command also maintains `.blueprint/github/issues.index.json`. Use `--use-gh`
 `blueprint lint --ci` is the strict pre-code automation. It fails if implementation-critical docs still contain `TBD`, story packets lack ownership or file boundaries, specs remain placeholders, edge-case coverage is incomplete, or traceability is missing from requirement to story to test evidence.
 
 Use `blueprint check` for adoption and `blueprint lint --ci` before implementation.
+
+When lint fails, run:
+
+```bash
+blueprint explain-fail --directory .
+```
+
+Then follow `docs/PROJECT_RECOVERY_GUIDE.md`.
+
+## Depth Standard
+
+Use these docs to prevent shallow-but-plausible output:
+
+- `docs/ARTIFACT_DEPTH_STANDARD.md`: minimum depth per artifact.
+- `docs/EXAMPLE_COMPARISON.md`: weak vs strong examples.
+- `docs/COMMERCE_RISK_PLAYBOOK.md`: payment, shipping, inventory, callback, privacy, and RBAC checks.
+- `docs/PROJECT_RECOVERY_GUIDE.md`: how to upgrade an old or shallow project.
 
 ## GitHub CI Behavior
 

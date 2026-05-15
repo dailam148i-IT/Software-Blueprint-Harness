@@ -25,6 +25,10 @@ const REQUIRED_ARTIFACTS = [
   "docs/WORKFLOW.md",
   "docs/FEATURE_INTAKE.md",
   "docs/QUALITY_GATES.md",
+  "docs/ARTIFACT_DEPTH_STANDARD.md",
+  "docs/EXAMPLE_COMPARISON.md",
+  "docs/PROJECT_RECOVERY_GUIDE.md",
+  "docs/COMMERCE_RISK_PLAYBOOK.md",
   "docs/TEST_MATRIX.md",
   "docs/TRACEABILITY_MATRIX.md",
   "docs/EDGE_CASE_MATRIX.md",
@@ -57,6 +61,7 @@ const COMMANDS = new Set([
   "doctor",
   "status",
   "check",
+  "explain-fail",
   "lint",
   "readiness",
   "new-story",
@@ -99,6 +104,9 @@ export async function runCli(argv) {
       return;
     case "check":
       await commandCheck(parseOptions(rest));
+      return;
+    case "explain-fail":
+      await commandExplainFail(parseOptions(rest));
       return;
     case "lint":
       await commandLint(parseOptions(rest));
@@ -147,6 +155,7 @@ Usage:
   blueprint --version
   blueprint status [--directory <path>]
   blueprint check [--directory <path>] [--strict]
+  blueprint explain-fail [--directory <path>]
   blueprint lint [--directory <path>] [--strict] [--ci]
   blueprint readiness [--directory <path>] [--ci]
   blueprint new-story "Story title" [--directory <path>]
@@ -258,7 +267,7 @@ async function writeMany(root, files, options) {
   return results;
 }
 
-async function readDirectoryTemplates(relativeRoot) {
+async function readDirectoryTemplates(relativeRoot, skip = new Set()) {
   const absoluteRoot = path.join(repoRoot, relativeRoot);
   const files = {};
 
@@ -278,6 +287,7 @@ async function readDirectoryTemplates(relativeRoot) {
       }
       if (!entry.isFile()) continue;
       const relativePath = path.relative(repoRoot, absolutePath).replaceAll("\\", "/");
+      if (skip.has(relativePath)) continue;
       files[relativePath] = await fs.readFile(absolutePath, "utf8");
     }
   }
@@ -317,7 +327,7 @@ async function commandInit(options) {
     return;
   }
 
-  const files = { ...templates };
+  const files = { ...templates, ...(await readDirectoryTemplates("docs", new Set(["docs/TEST_MATRIX.md"]))) };
   if (options["with-examples"]) {
     Object.assign(files, exampleTemplates);
     Object.assign(files, await readDirectoryTemplates("examples"));
@@ -486,6 +496,35 @@ async function commandLint(options) {
     process.exitCode = 1;
   } else if (hasFailures) {
     process.exitCode = 1;
+  }
+}
+
+async function commandExplainFail(options) {
+  const root = resolveDirectory(options);
+  const result = await lintProject(root, REQUIRED_ARTIFACTS);
+  const items = [
+    ...result.missing.map((item) => ({ type: "missing", text: item })),
+    ...result.failures.map((item) => ({ type: "failure", text: item })),
+    ...result.concerns.map((item) => ({ type: "concern", text: item }))
+  ];
+
+  if (items.length === 0) {
+    console.log("PASS no lint failures to explain.");
+    return;
+  }
+
+  console.log("# Blueprint Repair Checklist");
+  console.log("");
+  console.log("Run these before implementation:");
+  console.log("1. blueprint init --directory . --yes --merge");
+  console.log("2. Fill missing production artifacts, do not leave placeholder rows.");
+  console.log("3. blueprint lint --directory . --ci");
+  console.log("4. blueprint readiness --directory . --ci");
+  console.log("");
+  console.log("## Findings");
+  for (const item of items) {
+    console.log(`- ${item.type}: ${item.text}`);
+    console.log(`  repair: ${repairHint(item.text)}`);
   }
 }
 
@@ -1043,6 +1082,49 @@ function asArray(value) {
   if (Array.isArray(value)) return value.filter((item) => item !== undefined && item !== null);
   if (value === undefined || value === null || value === "") return [];
   return [value];
+}
+
+function repairHint(text) {
+  if (text.startsWith("docs/") || text.startsWith(".blueprint/") || text.startsWith("AGENTS.md")) {
+    return "Run `blueprint init --directory . --yes --merge`, then fill the created artifact with project-specific content.";
+  }
+  if (/Status drift|Product Passport|risk_level|current_stage|readiness_status/i.test(text)) {
+    return "Update `docs/product/product-passport.yaml` and `.blueprint/status.json` so stage/risk/readiness use the same values.";
+  }
+  if (/story|US-\d{3}|Definition|Proof Format|Agent Ownership|Lane/i.test(text)) {
+    return "Regenerate or rewrite the story using the production story template: status, lane, DoR, DoD, contract links, edge cases, ownership, proof format.";
+  }
+  if (/research|simulated|planned\/simulated|source inventory|claim map/i.test(text)) {
+    return "Replace simulated research with source inventory, evidence cards, claim map, conflicts, and named assumptions.";
+  }
+  if (/Data\/API Contract|Request|Response|Status Code|Event Payload|Authorization|Idempotency/i.test(text)) {
+    return "Complete the Data/API Contract with request/response shapes, status codes, authorization, idempotency, event payloads, validation errors, and owners.";
+  }
+  if (/Integration Protocol|idempotency|retry|callback|dead letter|reconcile/i.test(text)) {
+    return "Complete `docs/product/integration-protocol.md` with idempotency, retry, signature, callback ordering, dead-letter, and reconciliation rules.";
+  }
+  if (/TEST_MATRIX|boolean|yes\/no|test scenario|TC-|Fixture|Command|pending implementation/i.test(text)) {
+    return "Replace yes/no cells with scenario IDs, commands, fixtures, expected evidence paths, owner, and status.";
+  }
+  if (/PRD|REQ-|AC-|requirement/i.test(text)) {
+    return "Rewrite PRD requirements with stable IDs such as `REQ-ORDER-001` and acceptance criteria IDs such as `AC-ORDER-001`.";
+  }
+  if (/TRACEABILITY_MATRIX/i.test(text)) {
+    return "Add rows mapping requirement -> spec contract -> story -> test scenario -> evidence -> owner.";
+  }
+  if (/EDGE_CASE_MATRIX/i.test(text)) {
+    return "Add failure rows for duplicate/late callbacks, stock race, timeout, refund/cancel, dead-letter, reconcile, authorization, and privacy where relevant.";
+  }
+  if (/State machine|state-machine|state_machines/i.test(text)) {
+    return "Define states, transitions, guards, side effects, errors, terminal states, and linked stories in `docs/specs/state-machines.yaml`.";
+  }
+  if (/RBAC|roles|permission/i.test(text)) {
+    return "Define role/resource/action rules, audit requirements, denial behavior, and linked stories in `docs/specs/rbac.yaml`.";
+  }
+  if (/Error-code|error-codes|error code/i.test(text)) {
+    return "Define code, HTTP status, retryability, user/admin message, owner, and linked story in `docs/specs/error-codes.yaml`.";
+  }
+  return "Open `docs/ARTIFACT_DEPTH_STANDARD.md` and fill the affected artifact to implementation-ready depth.";
 }
 
 function extensionOutputTemplate(extension, hook, output) {

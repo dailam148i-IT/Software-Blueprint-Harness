@@ -37,6 +37,7 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --dry-
 npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --yes --with-github --with-examples
 npx -y github:dailam148i-IT/Software-Blueprint-Harness doctor --directory .
 npx -y github:dailam148i-IT/Software-Blueprint-Harness check --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness explain-fail --directory .
 ```
 
 If the package is installed globally or locally, replace the GitHub `npx` runner with `blueprint`.
@@ -88,7 +89,7 @@ blueprint research validate
 ## 4. Product Requirements
 
 ```text
-Using the accepted research synthesis, write the PRD. Include problem, users, scope, non-scope, functional requirements, non-functional requirements, acceptance criteria, assumptions, and open questions. Keep every requirement testable.
+Using the accepted research synthesis, write the PRD to the Artifact Depth Standard. Include personas, scope by release, requirement IDs, acceptance criteria IDs, business rules, measurable NFRs, assumptions/open questions with owner and severity, and trace targets. Keep every requirement testable.
 ```
 
 Expected files:
@@ -161,7 +162,7 @@ docs/TRACEABILITY_MATRIX.md
 ## 9. Epics And Story Packets
 
 ```text
-Create epics and story packets from the PRD. Each story must be small enough for one implementation agent, include product contract, acceptance criteria, Definition of Ready, Definition of Done, validation proof, ownership, allowed files, forbidden files, proof format, and dependencies.
+Create epics and story packets from the PRD. Each story must be small enough for one implementation agent, include product contract, acceptance criteria, Definition of Ready, Definition of Done, machine-readable contract links, edge cases, validation proof, ownership, allowed files, forbidden files, proof format, and dependencies.
 ```
 
 Expected commands:
@@ -175,7 +176,7 @@ blueprint new-story "Record attendance"
 ## 10. Test Matrix
 
 ```text
-Build the test matrix and traceability matrix. Map every story to unit, integration, E2E, platform, and evidence expectations. Do not leave placeholder rows.
+Build the test matrix and traceability matrix. Map every requirement and story to scenario IDs, test type, command, fixture/data, expected evidence, owner, and status. Do not use yes/no as proof.
 ```
 
 Expected file:

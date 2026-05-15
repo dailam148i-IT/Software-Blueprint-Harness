@@ -32,7 +32,9 @@ The agent must read:
 2. `docs/SIMPLE_PROMPT_WORKFLOW.md`
 3. `docs/WORKFLOW.md`
 4. `docs/QUALITY_GATES.md`
-5. `docs/PROMPTS_END_TO_END.md`
+5. `docs/ARTIFACT_DEPTH_STANDARD.md`
+6. `docs/EXAMPLE_COMPARISON.md`
+7. `docs/PROMPTS_END_TO_END.md`
 
 ## Step 3: Human Starts A Product
 
@@ -51,7 +53,7 @@ Agent behavior:
 5. Create the multi-agent plan.
 6. Ask verifier agents to review the plan.
 7. Stop for human approval.
-8. After approval, write the full documentation set.
+8. After approval, write the full documentation set to the Artifact Depth Standard.
 
 ## Step 4: Human Approves
 
@@ -72,6 +74,8 @@ APPROVED_FOR_DOCUMENTATION: yes
 After approval, agents write docs and run:
 
 ```bash
+blueprint explain-fail
+blueprint lint --ci
 blueprint readiness
 blueprint memory update
 blueprint memory compact
