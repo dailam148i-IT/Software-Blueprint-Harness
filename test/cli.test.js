@@ -33,8 +33,16 @@ test("init creates harness and GitHub templates", async () => {
     await runCli(["init", "--directory", root, "--yes", "--with-github", "--with-examples"]);
     assert.equal(await exists(path.join(root, "AGENTS.md")), true);
     assert.equal(await exists(path.join(root, "docs/product/product-passport.yaml")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/state-machines.yaml")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/rbac.yaml")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/error-codes.yaml")), true);
+    assert.equal(await exists(path.join(root, "docs/EDGE_CASE_MATRIX.md")), true);
+    assert.equal(await exists(path.join(root, "docs/TRACEABILITY_MATRIX.md")), true);
     assert.equal(await exists(path.join(root, ".github/workflows/blueprint-check.yml")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/README.md")), true);
+    assert.equal(await exists(path.join(root, "examples/demo-student-management/docs/EDGE_CASE_MATRIX.md")), true);
+    assert.equal(await exists(path.join(root, "examples/demo-student-management/docs/specs/state-machines.yaml")), true);
+    assert.equal(await exists(path.join(root, "examples/demo-student-management/docs/stories/US-001-create-student-profile.md")), true);
     assert.equal(await exists(path.join(root, "extensions/security-threat-model/extension.yaml")), true);
     const extensionManifest = await fs.readFile(path.join(root, "extensions/security-threat-model/extension.yaml"), "utf8");
     const agentRules = await fs.readFile(path.join(root, "AGENTS.md"), "utf8");
@@ -69,6 +77,19 @@ test("check validates installed structure", async () => {
   });
 });
 
+test("lint enforces production documentation gates", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const output = await capture(() => runCli(["lint", "--directory", root]));
+    assert.match(output, /FAIL blueprint production lint/);
+    assert.match(output, /Product Passport field is not implementation-ready/i);
+    assert.match(output, /TRACEABILITY_MATRIX still contains placeholder rows/i);
+    assert.match(output, /State machine spec still contains placeholder/i);
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
+  });
+});
+
 test("story and context packet generation work", async () => {
   await withTempProject(async (root) => {
     await runCli(["init", "--directory", root, "--yes"]);
@@ -76,6 +97,26 @@ test("story and context packet generation work", async () => {
     await runCli(["export-context", "US-001", "--agent", "developer-agent", "--directory", root]);
     assert.equal(await exists(path.join(root, "docs/stories/US-001-create-student-profile.md")), true);
     assert.equal(await exists(path.join(root, ".blueprint/context-packets/US-001-developer-agent.md")), true);
+    const story = await fs.readFile(path.join(root, "docs/stories/US-001-create-student-profile.md"), "utf8");
+    const packet = await fs.readFile(path.join(root, ".blueprint/context-packets/US-001-developer-agent.md"), "utf8");
+    assert.match(story, /## Definition of Ready/);
+    assert.match(story, /## Definition of Done/);
+    assert.match(story, /## Proof Format/);
+    assert.match(packet, /docs\/specs\/state-machines.yaml/);
+    assert.match(packet, /docs\/TRACEABILITY_MATRIX.md/);
+  });
+});
+
+test("lint catches missing story trace and edge-case rows", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    await runCli(["new-story", "Create student profile", "--directory", root]);
+    const output = await capture(() => runCli(["lint", "--directory", root, "--ci"]));
+    assert.match(output, /TRACEABILITY_MATRIX has no row for US-001/i);
+    assert.match(output, /EDGE_CASE_MATRIX has no row for US-001/i);
+    assert.match(output, /TEST_MATRIX has no row for US-001/i);
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
   });
 });
 

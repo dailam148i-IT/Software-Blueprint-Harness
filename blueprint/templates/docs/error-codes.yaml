@@ -1,0 +1,8 @@
+version: 0.1.0
+errors:
+  - code: TBD
+    owner: TBD
+    http_status: 400
+    user_message: TBD
+    retryable: false
+    linked_story: US-000

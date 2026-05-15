@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Edge Case Matrix Row",
+  "type": "object",
+  "required": ["flow", "trigger", "expected_behavior", "owner", "story", "test", "status"],
+  "properties": {
+    "flow": { "type": "string" },
+    "trigger": { "type": "string" },
+    "expected_behavior": { "type": "string" },
+    "owner": { "type": "string" },
+    "story": { "type": "string", "pattern": "^US-[0-9]{3}$" },
+    "test": { "type": "string" },
+    "evidence": { "type": "string" },
+    "status": { "enum": ["planned", "ready", "covered", "blocked", "not_applicable"] }
+  }
+}

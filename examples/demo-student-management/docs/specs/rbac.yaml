@@ -1,0 +1,38 @@
+version: 0.1.0
+roles:
+  - name: admin
+    owner: product-agent
+    description: Full school operations access.
+    permissions:
+      - students.read
+      - students.write
+      - students.archive
+      - users.manage
+  - name: staff
+    owner: product-agent
+    description: Daily student operations.
+    permissions:
+      - students.read
+      - students.write
+  - name: viewer
+    owner: product-agent
+    description: Read-only reporting.
+    permissions:
+      - students.read
+resources:
+  - name: student_record
+    data_classification: personal_data
+    actions:
+      - read
+      - create
+      - update
+      - archive
+rules:
+  - id: RBAC-001
+    resource: student_record
+    action: create
+    allowed_roles:
+      - admin
+      - staff
+    audit_required: true
+    linked_story: US-001

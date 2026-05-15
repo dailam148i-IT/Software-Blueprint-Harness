@@ -76,11 +76,21 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
     for (const heading of ["## Status", "## Lane", "## Product Contract", "## Acceptance Criteria", "## Validation"]) {
       if (!text.includes(heading)) failures.push(`${story} missing heading: ${heading}`);
     }
+    for (const heading of [
+      "## Definition of Ready",
+      "## Definition of Done",
+      "## Machine-Readable Contract Links",
+      "## Edge Cases",
+      "## Agent Ownership",
+      "## Proof Format"
+    ]) {
+      if (!text.includes(heading)) qualityIssues.push(`${story} missing production story section: ${heading}`);
+    }
     if (hasStoryPlaceholder(text)) {
       qualityIssues.push(`${story} still contains placeholder story content.`);
     }
     if (hasBlankAgentOwnership(text)) {
-      qualityIssues.push(`${story} has no implementation agent ownership.`);
+      qualityIssues.push(`${story} has incomplete implementation agent ownership or file boundaries.`);
     }
   }
 
@@ -95,9 +105,16 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
     qualityIssues.push("TEST_MATRIX still contains placeholder TBD row.");
   }
 
+  await validateTraceability(root, stories, qualityIssues);
+  await validateEdgeCases(root, stories, qualityIssues);
+  await validateStructuredSpecs(root, qualityIssues);
   await validateDocumentReadiness(root, qualityIssues);
 
   return { missing, concerns, failures, stories };
+}
+
+export async function lintProject(root, requiredArtifacts) {
+  return validateProject(root, requiredArtifacts, { readiness: true });
 }
 
 async function validateDocumentReadiness(root, qualityIssues) {
@@ -116,6 +133,21 @@ async function validateDocumentReadiness(root, qualityIssues) {
       path: "docs/product/data-api-contract.md",
       label: "Data/API Contract",
       placeholders: ["## Entities", "## Commands", "## Queries", "## Validation and Errors", "## Permissions"]
+    },
+    {
+      path: "docs/product/integration-protocol.md",
+      label: "Integration Protocol",
+      placeholders: [
+        "## Idempotency Keys",
+        "## Retry Policy",
+        "## Signature Validation",
+        "## Callback Handling",
+        "## Dead Letter Handling",
+        "## Reconcile Runbook",
+        "## Observability",
+        "## Security",
+        "## Test Requirements"
+      ]
     },
     {
       path: "docs/architecture.md",
@@ -145,6 +177,109 @@ async function validateDocumentReadiness(root, qualityIssues) {
   }
 }
 
+async function validateTraceability(root, stories, qualityIssues) {
+  const text = await readOptional(path.join(root, "docs/TRACEABILITY_MATRIX.md"));
+  if (!text) return;
+  if (containsTbd(text) || text.includes("US-000")) {
+    qualityIssues.push("TRACEABILITY_MATRIX still contains placeholder rows.");
+  }
+
+  if (stories.length === 0) return;
+  if (!text.includes("| US-")) {
+    qualityIssues.push("TRACEABILITY_MATRIX has no story rows yet.");
+  }
+  for (const story of stories) {
+    const id = story.match(/US-\d{3}/)?.[0];
+    if (id && !text.includes(id)) qualityIssues.push(`TRACEABILITY_MATRIX has no row for ${id}.`);
+  }
+}
+
+async function validateEdgeCases(root, stories, qualityIssues) {
+  const text = await readOptional(path.join(root, "docs/EDGE_CASE_MATRIX.md"));
+  if (!text) return;
+  if (containsTbd(text) || text.includes("US-000")) {
+    qualityIssues.push("EDGE_CASE_MATRIX still contains placeholder ownership or story rows.");
+  }
+
+  const context = await readProductContext(root);
+  const needsCommerceFlows = /payment|checkout|order|inventory|shipping|refund|callback|webhook/.test(context);
+  if (needsCommerceFlows) {
+    for (const requiredFlow of [
+      "duplicate callback",
+      "late callback",
+      "out of stock",
+      "refund",
+      "timeout",
+      "dead-letter",
+      "reconcile"
+    ]) {
+      if (!normalizeText(text).includes(normalizeText(requiredFlow))) {
+        qualityIssues.push(`EDGE_CASE_MATRIX missing standard commerce/integration flow: ${requiredFlow}.`);
+      }
+    }
+  }
+
+  for (const story of stories) {
+    const id = story.match(/US-\d{3}/)?.[0];
+    if (id && !text.includes(id)) qualityIssues.push(`EDGE_CASE_MATRIX has no row for ${id}.`);
+  }
+}
+
+async function readProductContext(root) {
+  const files = [
+    "docs/product/product-passport.yaml",
+    "docs/product/prd.md",
+    "docs/product/data-api-contract.md",
+    "docs/product/integration-protocol.md",
+    "docs/specs/state-machines.yaml",
+    "docs/specs/error-codes.yaml"
+  ];
+  const chunks = [];
+  for (const file of files) {
+    chunks.push(await readOptional(path.join(root, file)));
+  }
+  return normalizeText(chunks.join("\n"));
+}
+
+async function validateStructuredSpecs(root, qualityIssues) {
+  const specs = [
+    {
+      path: "docs/specs/state-machines.yaml",
+      label: "State machine spec",
+      key: "state_machines",
+      requiredText: ["transitions", "guards", "side_effects", "errors"]
+    },
+    {
+      path: "docs/specs/rbac.yaml",
+      label: "RBAC spec",
+      key: "roles",
+      requiredText: ["permissions", "resources", "rules"]
+    },
+    {
+      path: "docs/specs/error-codes.yaml",
+      label: "Error-code spec",
+      key: "errors",
+      requiredText: ["code:", "http_status", "retryable", "linked_story"]
+    }
+  ];
+
+  for (const spec of specs) {
+    const text = await readOptional(path.join(root, spec.path));
+    if (!text) continue;
+    const parsed = parseSimpleYaml(text);
+    const entries = parsed ? parsed[spec.key] : null;
+    if (!Array.isArray(entries) || entries.length === 0) {
+      qualityIssues.push(`${spec.label} has no ${spec.key} entries.`);
+    }
+    if (containsTbd(text) || text.includes("US-000")) {
+      qualityIssues.push(`${spec.label} still contains placeholder owners or story links.`);
+    }
+    for (const marker of spec.requiredText) {
+      if (!text.includes(marker)) qualityIssues.push(`${spec.label} missing required marker: ${marker}.`);
+    }
+  }
+}
+
 function isPlaceholder(value) {
   if (Array.isArray(value)) return value.length === 0 || value.every(isPlaceholder);
   if (value && typeof value === "object") return Object.keys(value).length === 0;
@@ -161,10 +296,16 @@ function containsTbd(text) {
 function hasStoryPlaceholder(text) {
   return [
     "Describe the behavior this story must make true.",
+    "Link rows from docs/EDGE_CASE_MATRIX.md or explain why none apply.",
     "Criterion 1.",
     "Criterion 2.",
     "Criterion 3.",
     "Expected proof",
+    "Owner: TBD",
+    "Primary agent: TBD",
+    "Handoff target: TBD",
+    "Files/modules allowed: TBD",
+    "Files/modules forbidden: TBD",
     "| Unit | |",
     "| Integration | |",
     "| E2E | |",
@@ -173,8 +314,10 @@ function hasStoryPlaceholder(text) {
 }
 
 function hasBlankAgentOwnership(text) {
-  const match = text.match(/^Primary agent:\s*(.*)$/im);
-  return Boolean(match && !match[1].trim());
+  const primary = text.match(/^\s*-?\s*Primary agent:\s*(.*)$/im);
+  const allowed = text.match(/^\s*-?\s*Files\/modules allowed:\s*(.*)$/im);
+  const forbidden = text.match(/^\s*-?\s*Files\/modules forbidden:\s*(.*)$/im);
+  return [primary, allowed, forbidden].some((match) => !match || isPlaceholder(match[1]));
 }
 
 function sectionLooksEmpty(text, heading) {
@@ -191,6 +334,15 @@ function sectionLooksEmpty(text, heading) {
     .map((line) => line.replace(/^[-*]\s*/, "").trim())
     .filter(Boolean)
     .every((line) => /^(TBD|TODO|N\/A|none|unknown)$/i.test(line));
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function readOptional(filePath) {

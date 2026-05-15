@@ -63,6 +63,10 @@ The harness should produce or guide you toward:
 - UX Spec
 - Architecture
 - Data/API Contract
+- Integration Protocol
+- State/RBAC/Error-code specs
+- Edge Case Matrix
+- Traceability Matrix
 - Epics and stories
 - Test Matrix
 - Readiness Review
@@ -78,9 +82,12 @@ Then edit the generated story in `docs/stories/` until it has:
 
 - Product contract
 - Acceptance criteria
+- Definition of Ready and Definition of Done
 - Design notes
 - Validation proof
 - Agent ownership
+- Allowed and forbidden files/modules
+- Proof format
 
 ## 5. Export Context For A Coding Agent
 
@@ -96,9 +103,10 @@ The packet appears in:
 
 Give that packet to a coding agent instead of dumping the whole repo context.
 
-## 6. Run Readiness
+## 6. Run Production Lint And Readiness
 
 ```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness lint --directory . --ci
 npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 ```
 

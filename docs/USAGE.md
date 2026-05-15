@@ -35,10 +35,13 @@ Recommended flow:
 4. Write `docs/product/ux-spec.md` if the product has UI.
 5. Write `docs/architecture.md`.
 6. Write `docs/product/data-api-contract.md`.
-7. Create epics in `docs/epics/epics.md`.
-8. Create story packets in `docs/stories/`.
-9. Map stories to proof in `docs/TEST_MATRIX.md`.
-10. Run `blueprint readiness`.
+7. Write `docs/product/integration-protocol.md`.
+8. Update `docs/specs/state-machines.yaml`, `docs/specs/rbac.yaml`, and `docs/specs/error-codes.yaml`.
+9. Fill `docs/EDGE_CASE_MATRIX.md` and `docs/TRACEABILITY_MATRIX.md`.
+10. Create epics in `docs/epics/epics.md`.
+11. Create story packets in `docs/stories/`.
+12. Map stories to proof in `docs/TEST_MATRIX.md`.
+13. Run `blueprint lint --ci` and `blueprint readiness`.
 
 The user should not be forced to choose technology immediately. First gather product intent, then research, then propose options and ask the user to approve.
 
@@ -72,6 +75,8 @@ Each agent packet should define:
 - forbidden changes
 - validation proof
 - handoff target
+
+Before handoff, each story must also link its state machine, RBAC, error-code, edge-case, traceability, and test matrix rows.
 
 ## Common Workflow: Sync Reference Repositories
 
@@ -129,9 +134,15 @@ This creates issue markdown under:
 
 The command also maintains `.blueprint/github/issues.index.json`. Use `--use-gh` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown. Re-running with `--use-gh` skips stories already marked created unless you pass `--force`.
 
+## Production Lint
+
+`blueprint lint --ci` is the strict pre-code automation. It fails if implementation-critical docs still contain `TBD`, story packets lack ownership or file boundaries, specs remain placeholders, edge-case coverage is incomplete, or traceability is missing from requirement to story to test evidence.
+
+Use `blueprint check` for adoption and `blueprint lint --ci` before implementation.
+
 ## GitHub CI Behavior
 
-The installed GitHub workflow runs `blueprint check` without `--strict`. This lets a new project push while it still has expected concerns such as missing stories. Structural failures still fail, and teams can run `blueprint check --strict` locally or in a stricter branch protection workflow once adoption is complete.
+The installed GitHub workflow runs `blueprint check` without `--strict`. This lets a new project push while it still has expected concerns such as missing stories. Structural failures still fail, and teams can run `blueprint lint --ci` locally or in a stricter branch protection workflow once adoption is complete.
 
 ## What The AI Should Ask
 
@@ -173,5 +184,7 @@ The framework is successful when a new developer or coding agent can answer:
 - What is out of scope?
 - Which decisions are locked?
 - Which story am I implementing?
+- Which state/RBAC/error contract applies?
+- Which edge cases can break this flow?
 - How do I prove it works?
 - What am I not allowed to change?

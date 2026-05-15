@@ -32,10 +32,16 @@ do not code. Treat it as a blueprint-start request:
 7. docs/product/prd.md
 8. docs/architecture.md
 9. docs/product/data-api-contract.md
-10. docs/stories/
-11. docs/TEST_MATRIX.md
-12. docs/decisions/
-13. .blueprint/memory/project-memory.yaml
+10. docs/product/integration-protocol.md
+11. docs/specs/state-machines.yaml
+12. docs/specs/rbac.yaml
+13. docs/specs/error-codes.yaml
+14. docs/stories/
+15. docs/TRACEABILITY_MATRIX.md
+16. docs/EDGE_CASE_MATRIX.md
+17. docs/TEST_MATRIX.md
+18. docs/decisions/
+19. .blueprint/memory/project-memory.yaml
 
 ## Task Loop
 1. Classify the request: new spec, spec slice, change request, initiative, maintenance, or harness improvement.
@@ -72,6 +78,7 @@ Start here:
 \`\`\`bash
 blueprint status
 blueprint check
+blueprint lint --ci
 blueprint readiness
 \`\`\`
 
@@ -126,7 +133,10 @@ Gate statuses: PASS, PASS_WITH_CONCERNS, FAIL, BLOCKED.
 - Product Gate: scope, out-of-scope, metrics.
 - Requirement Gate: testable requirements and no contradictions.
 - Solution Gate: stack, boundaries, data/API, security.
+- Machine Spec Gate: state machines, RBAC, and error codes are structured and traceable.
+- Integration Gate: idempotency, retry, signature, callback, dead-letter, and reconcile rules.
 - Story Gate: context, acceptance criteria, proof.
+- Trace Gate: requirement -> spec -> story -> test -> evidence.
 - Agent Gate: ownership and limits.
 - Pre-Code Gate: READY_FOR_IMPLEMENTATION.
 `,
@@ -267,6 +277,11 @@ Required capabilities:
 - One-command install.
 - Non-destructive init.
 - Placeholder-blocking readiness gate.
+- Machine-readable state machine, RBAC, and error-code specs.
+- Edge-case matrix for callbacks, inventory, refund/cancel, timeout, retries, and reconciliation.
+- Traceability lint from requirement to story, test matrix, and evidence.
+- Story packets with Definition of Ready, Definition of Done, scope boundaries, and proof format.
+- Integration protocol for idempotency, retry, signature validation, dead-letter handling, and reconcile runbooks.
 - Stable memory and context export.
 - Extension outputs that can block readiness.
 - GitHub templates and issue export.
@@ -303,9 +318,14 @@ Propose technology options with tradeoffs, recommend one, then update architectu
 Create implementation-ready story packets with product contract, acceptance criteria, validation proof, ownership, allowed files, forbidden files, and dependencies.
 \`\`\`
 
+## Machine-Readable Specs
+\`\`\`text
+Update the state machine, RBAC, error-code, edge-case, integration protocol, and traceability artifacts. Every story must map to the relevant machine-readable contracts before code.
+\`\`\`
+
 ## Readiness
 \`\`\`text
-Run extension hooks and readiness. Fix blockers before implementation. Do not start code until READY_FOR_IMPLEMENTATION or accepted concerns have owners.
+Run extension hooks, blueprint lint --ci, and readiness. Fix blockers before implementation. Do not start code until READY_FOR_IMPLEMENTATION or accepted concerns have owners.
 \`\`\`
 
 ## Implementation
@@ -320,6 +340,29 @@ This file maps product behavior to proof.
 | Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TBD | Add rows when story packets are created | no | no | no | no | planned | none |
+`,
+  "docs/TRACEABILITY_MATRIX.md": `# Traceability Matrix
+
+This file maps requirements to structured contracts, story packets, tests, and evidence.
+
+| Requirement | Source | Spec Contract | Story | Test Matrix Row | Evidence | Owner | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TBD | docs/product/prd.md | docs/specs/state-machines.yaml | US-000 | docs/TEST_MATRIX.md | none | TBD | planned |
+`,
+  "docs/EDGE_CASE_MATRIX.md": `# Edge Case Matrix
+
+This file makes failure behavior explicit before implementation.
+
+| Flow | Trigger | Expected behavior | Owner | Story | Test | Evidence | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Payment callback | Provider sends duplicate callback | Operation is idempotent; duplicate is recorded and ignored safely. | TBD | US-000 | Integration | none | planned |
+| Payment callback | Provider sends late callback after timeout/cancel | Callback is reconciled against current state and cannot reopen closed work without a decision. | TBD | US-000 | Integration | none | planned |
+| Checkout | Item becomes out of stock or unavailable during checkout | User sees recoverable error; no payment capture or inconsistent reservation remains. | TBD | US-000 | E2E | none | planned |
+| Refund/cancel | User or admin cancels after payment attempt | State transition, refund/cancel command, and audit log are deterministic. | TBD | US-000 | Integration | none | planned |
+| Payment timeout | Payment remains pending past timeout window | Pending state expires, retry/reconcile job handles provider uncertainty, user receives clear status. | TBD | US-000 | Integration | none | planned |
+| Provider outage | External provider is unavailable | Request retries according to policy, then dead-letters with alert and manual recovery path. | TBD | US-000 | Platform | none | planned |
+| Partial failure | Local write succeeds but external action fails | System records compensating action or recovery task; no silent data loss. | TBD | US-000 | Integration | none | planned |
+| Retry exhaustion | Retry policy reaches max attempts | Work item moves to dead-letter queue/runbook with owner and evidence. | TBD | US-000 | Platform | none | planned |
 `,
   "docs/HARNESS_BACKLOG.md": `# Harness Backlog
 
@@ -406,6 +449,162 @@ TBD
 
 ## Permissions
 TBD
+`,
+  "docs/product/integration-protocol.md": `# Integration Protocol
+
+Use this when the product talks to external systems, payment providers, webhooks, imports, exports, queues, email/SMS, or automation jobs.
+
+## Idempotency Keys
+TBD
+
+## Retry Policy
+TBD
+
+## Signature Validation
+TBD
+
+## Callback Handling
+TBD
+
+## Dead Letter Handling
+TBD
+
+## Reconcile Runbook
+TBD
+
+## Observability
+TBD
+
+## Security
+TBD
+
+## Test Requirements
+TBD
+`,
+  "docs/specs/state-machines.yaml": `version: 0.1.0
+state_machines:
+  - name: order-payment-shipping
+    owner: TBD
+    entity: TBD
+    initial_state: draft
+    states:
+      - draft
+      - pending_payment
+      - paid
+      - fulfilling
+      - shipped
+      - completed
+      - cancelled
+      - refunded
+      - failed
+    transitions:
+      - from: draft
+        event: submit_checkout
+        to: pending_payment
+        guards:
+          - inventory_reserved
+          - user_can_checkout
+        side_effects:
+          - create_payment_intent
+        errors:
+          - CHECKOUT_OUT_OF_STOCK
+      - from: pending_payment
+        event: payment_timeout
+        to: failed
+        guards:
+          - timeout_window_elapsed
+        side_effects:
+          - release_inventory_reservation
+          - enqueue_reconcile
+        errors:
+          - PAYMENT_TIMEOUT
+      - from: pending_payment
+        event: payment_callback_success
+        to: paid
+        guards:
+          - valid_signature
+          - idempotency_key_not_processed
+        side_effects:
+          - record_payment
+          - enqueue_fulfillment
+        errors:
+          - WEBHOOK_INVALID_SIGNATURE
+      - from: paid
+        event: cancel_or_refund
+        to: refunded
+        guards:
+          - refund_allowed
+        side_effects:
+          - request_refund
+          - append_audit_log
+        errors:
+          - REFUND_NOT_ALLOWED
+`,
+  "docs/specs/rbac.yaml": `version: 0.1.0
+roles:
+  - name: admin
+    owner: TBD
+    description: Full operational access for approved administrators.
+    permissions:
+      - students.read
+      - students.write
+      - users.manage
+      - reports.read
+  - name: staff
+    owner: TBD
+    description: Day-to-day operational access.
+    permissions:
+      - students.read
+      - students.write
+      - reports.read
+  - name: viewer
+    owner: TBD
+    description: Read-only access.
+    permissions:
+      - students.read
+resources:
+  - name: student_record
+    data_classification: personal_data
+    actions:
+      - read
+      - create
+      - update
+      - delete
+rules:
+  - id: RBAC-001
+    resource: student_record
+    action: delete
+    allowed_roles:
+      - admin
+    audit_required: true
+    linked_story: US-000
+`,
+  "docs/specs/error-codes.yaml": `version: 0.1.0
+errors:
+  - code: CHECKOUT_OUT_OF_STOCK
+    owner: TBD
+    http_status: 409
+    user_message: The selected item is no longer available.
+    retryable: false
+    linked_story: US-000
+  - code: PAYMENT_TIMEOUT
+    owner: TBD
+    http_status: 408
+    user_message: Payment confirmation timed out. We are checking the final status.
+    retryable: true
+    linked_story: US-000
+  - code: WEBHOOK_INVALID_SIGNATURE
+    owner: TBD
+    http_status: 401
+    user_message: Request could not be verified.
+    retryable: false
+    linked_story: US-000
+  - code: REFUND_NOT_ALLOWED
+    owner: TBD
+    http_status: 409
+    user_message: This payment cannot be refunded automatically.
+    retryable: false
+    linked_story: US-000
 `,
   "docs/architecture.md": `# Architecture
 

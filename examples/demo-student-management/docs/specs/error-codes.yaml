@@ -1,0 +1,20 @@
+version: 0.1.0
+errors:
+  - code: STUDENT_REQUIRED_FIELD
+    owner: data-api-agent
+    http_status: 400
+    user_message: Student name and student code are required.
+    retryable: false
+    linked_story: US-001
+  - code: STUDENT_CODE_DUPLICATE
+    owner: data-api-agent
+    http_status: 409
+    user_message: Student code already exists.
+    retryable: false
+    linked_story: US-001
+  - code: PERMISSION_DENIED
+    owner: security-agent
+    http_status: 403
+    user_message: You do not have permission to perform this action.
+    retryable: false
+    linked_story: US-001

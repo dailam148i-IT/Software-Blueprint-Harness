@@ -76,6 +76,7 @@ blueprint init --directory . --yes
 blueprint start "I need to build a student management web app" --depth deep
 blueprint status
 blueprint check
+blueprint lint --ci
 blueprint readiness
 blueprint new-story "Create student profile"
 blueprint new-decision "Choose Next.js and PostgreSQL"
@@ -95,6 +96,8 @@ blueprint research validate
 ```
 
 Fresh GitHub installs run `blueprint check` without strict mode so a new repo can push while expected setup concerns still exist. Use `blueprint readiness` to enforce pre-code quality gates.
+
+Use `blueprint lint --ci` when you want the production-grade pre-code gate: no critical `TBD`, story ownership, machine-readable specs, edge-case coverage, and traceability from requirement to story to test evidence.
 
 ## Documentation
 
@@ -125,8 +128,15 @@ docs/
   PROMPTS_END_TO_END.md
   PRODUCTION_V1.md
   TEST_MATRIX.md
+  TRACEABILITY_MATRIX.md
+  EDGE_CASE_MATRIX.md
   MEMORY.md
   product/
+    integration-protocol.md
+  specs/
+    state-machines.yaml
+    rbac.yaml
+    error-codes.yaml
   stories/
   decisions/
   agent-briefs/

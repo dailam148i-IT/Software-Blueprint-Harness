@@ -18,7 +18,8 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 - `blueprint-research`: research domain, users, competitors, tech options, risks.
 - `blueprint-product`: create Product Passport and PRD.
 - `blueprint-solution`: create architecture, UX spec, data/API contract, ADRs.
-- `blueprint-plan`: create epics, stories, sprint plan, test matrix.
+- `blueprint-plan`: create epics, stories, sprint plan, traceability matrix, edge-case matrix, and test matrix.
+- `blueprint-spec`: create or update machine-readable state machines, RBAC, error codes, and integration protocol.
 - `blueprint-readiness`: run gates and produce readiness review.
 - `blueprint-agent-brief`: prepare role-specific context packets.
 - `blueprint-status`: summarize stage, blockers, and artifact health.
@@ -34,7 +35,7 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 6. Ask only high-impact product or tradeoff questions.
 7. Create or update the smallest relevant artifacts.
 8. Stop for human approval before writing the full documentation set when the plan is not yet approved.
-9. Keep product docs, stories, decisions, test matrix, and memory aligned.
+9. Keep product docs, specs, stories, decisions, traceability, edge cases, test matrix, and memory aligned.
 10. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
 
 ## Gates
@@ -44,9 +45,15 @@ Block implementation when:
 - PRD has no acceptance criteria.
 - Architecture has no stack or boundary decision.
 - Story has no validation proof.
+- Story has no Definition of Ready/Done, owner, allowed files, forbidden files, or proof format.
+- Machine-readable state/RBAC/error contracts are missing, placeholder-only, or unlinked from stories.
+- EDGE_CASE_MATRIX lacks required callback, timeout, refund/cancel, retry, dead-letter, or reconcile behavior where relevant.
+- TRACEABILITY_MATRIX does not map requirement -> spec -> story -> test -> evidence.
 - TEST_MATRIX lacks rows for core behavior.
 - Risk reviewer has unresolved `FAIL`.
 - High-risk flags exist without the required security/privacy/data review.
+
+Run `blueprint lint --ci` before readiness when the CLI is available.
 
 ## Output Discipline
 

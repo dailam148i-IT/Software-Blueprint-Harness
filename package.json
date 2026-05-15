@@ -1,6 +1,6 @@
 {
   "name": "software-blueprint-harness",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Documentation-first software delivery harness for humans, agents, and multi-agent development teams.",
   "type": "module",
   "bin": {

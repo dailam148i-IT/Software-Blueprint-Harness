@@ -1,0 +1,33 @@
+version: 0.1.0
+state_machines:
+  - name: student-profile
+    owner: product-agent
+    entity: student
+    initial_state: draft
+    states:
+      - draft
+      - active
+      - archived
+    transitions:
+      - from: draft
+        event: create_student
+        to: active
+        guards:
+          - required_fields_present
+          - student_code_unique
+          - actor_has_students_write
+        side_effects:
+          - append_audit_log
+        errors:
+          - STUDENT_REQUIRED_FIELD
+          - STUDENT_CODE_DUPLICATE
+          - PERMISSION_DENIED
+      - from: active
+        event: archive_student
+        to: archived
+        guards:
+          - actor_has_students_archive
+        side_effects:
+          - append_audit_log
+        errors:
+          - PERMISSION_DENIED

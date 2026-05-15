@@ -1,0 +1,8 @@
+version: 0.1.0
+state_machines:
+  - name: TBD
+    owner: TBD
+    entity: TBD
+    initial_state: TBD
+    states: []
+    transitions: []

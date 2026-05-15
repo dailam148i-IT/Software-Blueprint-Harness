@@ -71,6 +71,18 @@ blueprint check
 blueprint check --strict
 ```
 
+## `blueprint lint`
+
+Runs the production documentation gate. It checks placeholder-free product docs, machine-readable state/RBAC/error specs, integration protocol, story ownership, edge-case coverage, and traceability from requirement to story to test evidence.
+
+```bash
+blueprint lint
+blueprint lint --strict
+blueprint lint --ci
+```
+
+Use `check` for adoption and `lint --ci` for pre-code enforcement.
+
 ## `blueprint readiness`
 
 Generates or updates `docs/readiness-review.md`. Readiness treats placeholder product docs, placeholder story packets, missing story matrix rows, missing required extension outputs, and extension outputs marked `BLOCKED` as blockers.

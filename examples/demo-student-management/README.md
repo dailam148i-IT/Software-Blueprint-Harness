@@ -14,5 +14,7 @@ Expected flow:
 2. Research clarifies common modules and risks.
 3. Product docs define roles, scope, out-of-scope, and metrics.
 4. Solution docs choose stack and boundaries.
-5. Story packets define implementation slices.
-6. Readiness blocks code until validation is clear.
+5. Machine-readable specs define states, roles, errors, and integration behavior.
+6. Edge-case and traceability matrices connect requirements to stories and proof.
+7. Story packets define implementation slices.
+8. Readiness blocks code until validation is clear.

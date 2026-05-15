@@ -141,10 +141,27 @@ Expected file:
 docs/product/data-api-contract.md
 ```
 
-## 8. Epics And Story Packets
+## 8. Machine-Readable Specs And Edge Cases
 
 ```text
-Create epics and story packets from the PRD. Each story must be small enough for one implementation agent, include product contract, acceptance criteria, validation proof, ownership, allowed files, forbidden files, and dependencies.
+Create machine-readable implementation contracts before story handoff. Update state machines, RBAC, error codes, integration protocol, edge-case matrix, and traceability matrix. Include callback idempotency, late/duplicate events, out-of-stock or unavailable resources, cancel/refund, payment timeout, retry exhaustion, dead-letter handling, and reconcile runbook where relevant.
+```
+
+Expected files:
+
+```text
+docs/specs/state-machines.yaml
+docs/specs/rbac.yaml
+docs/specs/error-codes.yaml
+docs/product/integration-protocol.md
+docs/EDGE_CASE_MATRIX.md
+docs/TRACEABILITY_MATRIX.md
+```
+
+## 9. Epics And Story Packets
+
+```text
+Create epics and story packets from the PRD. Each story must be small enough for one implementation agent, include product contract, acceptance criteria, Definition of Ready, Definition of Done, validation proof, ownership, allowed files, forbidden files, proof format, and dependencies.
 ```
 
 Expected commands:
@@ -155,19 +172,20 @@ blueprint new-story "Manage class enrollment"
 blueprint new-story "Record attendance"
 ```
 
-## 9. Test Matrix
+## 10. Test Matrix
 
 ```text
-Build the test matrix. Map every story to unit, integration, E2E, platform, and evidence expectations. Do not leave placeholder rows.
+Build the test matrix and traceability matrix. Map every story to unit, integration, E2E, platform, and evidence expectations. Do not leave placeholder rows.
 ```
 
 Expected file:
 
 ```text
 docs/TEST_MATRIX.md
+docs/TRACEABILITY_MATRIX.md
 ```
 
-## 10. Extension Gates
+## 11. Extension Gates
 
 ```text
 Run required extension hooks before readiness. Complete any generated output docs until their Gate Status is not BLOCKED.
@@ -180,19 +198,20 @@ blueprint extension list
 blueprint extension run before_readiness
 ```
 
-## 11. Readiness Review
+## 12. Production Lint And Readiness Review
 
 ```text
-Run readiness. If it fails, fix the docs and story packets instead of starting code. Continue until the review says READY_FOR_IMPLEMENTATION or all concerns have owners and explicit acceptance.
+Run production lint and readiness. If either fails, fix the docs and story packets instead of starting code. Continue until the review says READY_FOR_IMPLEMENTATION or all concerns have owners and explicit acceptance.
 ```
 
-Expected command:
+Expected commands:
 
 ```bash
+blueprint lint --ci
 blueprint readiness
 ```
 
-## 12. Multi-Agent Handoff
+## 13. Multi-Agent Handoff
 
 ```text
 Create context packets for each implementation agent. Each packet must include the story, docs to read, constraints, allowed scope, forbidden changes, and validation proof.
@@ -208,19 +227,19 @@ blueprint memory update
 blueprint memory compact
 ```
 
-## 13. Implementation Prompt
+## 14. Implementation Prompt
 
 ```text
 Implement only story <US-xxx>. Read the exported context packet first. Stay inside allowed files/modules. Do not change product scope, architecture, data/API contracts, or validation rules unless you create a decision record and stop for review. After coding, run the required tests, update TEST_MATRIX evidence, update memory, and summarize residual risk.
 ```
 
-## 14. Review Prompt
+## 15. Review Prompt
 
 ```text
 Review the implementation for story <US-xxx>. Prioritize bugs, regressions, missing validation, security/privacy issues, and contract drift. Give findings first with file and line references. Do not rewrite unrelated code.
 ```
 
-## 15. Release Prompt
+## 16. Release Prompt
 
 ```text
 Prepare release notes. Verify docs, decisions, test matrix, evidence, readiness review, and memory are current. Do not release if any readiness blocker or extension output remains BLOCKED.

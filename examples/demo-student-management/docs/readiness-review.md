@@ -7,6 +7,7 @@ Status: CONCERNS
 - Product type identified.
 - Risk level correctly marked high because personal data and role access are involved.
 - Initial PRD, architecture, data/API contract, epics, and story packet exist.
+- State, RBAC, error-code, edge-case, traceability, and test matrix examples exist.
 
 ## Concerns
 
@@ -14,6 +15,7 @@ Status: CONCERNS
 - Need final decision on Excel import in MVP.
 - Need deployment target.
 - Need security threat model before implementation.
+- Need evidence files after implementation begins.
 
 ## Required Before Code
 

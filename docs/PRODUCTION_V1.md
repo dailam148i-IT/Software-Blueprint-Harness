@@ -8,6 +8,10 @@ Software Blueprint Harness reaches production v1 when it can be installed, audit
 - Non-destructive init with dry-run, merge, override, examples, and GitHub templates.
 - Structural check that does not block fresh adoption.
 - Readiness gate that blocks placeholder docs and incomplete story packets.
+- Production lint gate for traceability, spec completeness, story ownership, and edge-case coverage.
+- Machine-readable state machine, RBAC, and error-code artifacts.
+- Integration protocol covering idempotency, retry, signature validation, callbacks, dead-letter handling, reconciliation, observability, and tests.
+- Story packets with Definition of Ready, Definition of Done, allowed/forbidden files, and proof format.
 - Memory update and compact context with stable YAML.
 - Extension hooks that can block readiness.
 - GitHub issue export with duplicate protection.
@@ -22,12 +26,13 @@ Software Blueprint Harness reaches production v1 when it can be installed, audit
 2. Run `node bin/blueprint.js doctor`.
 3. Run `node bin/blueprint.js init --dry-run --with-github --with-examples`.
 4. Run a temp install and `blueprint check`.
-5. Run `blueprint refs status`.
-6. Run `blueprint refs index`.
-7. Run `blueprint research run --depth quick`.
-8. Run `blueprint research validate`.
-9. Confirm README, INSTALL, COMMANDS, USAGE, PROMPTS, and examples are current.
-10. Tag release with a changelog.
+5. Run `blueprint lint --ci` on a completed demo blueprint.
+6. Run `blueprint refs status`.
+7. Run `blueprint refs index`.
+8. Run `blueprint research run --depth quick`.
+9. Run `blueprint research validate`.
+10. Confirm README, INSTALL, COMMANDS, USAGE, PROMPTS, and examples are current.
+11. Tag release with a changelog.
 
 ## Known V1 Limits
 

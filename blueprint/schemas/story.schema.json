@@ -9,7 +9,13 @@
     "lane",
     "product_contract",
     "acceptance_criteria",
-    "validation"
+    "definition_of_ready",
+    "definition_of_done",
+    "machine_readable_contract_links",
+    "edge_cases",
+    "validation",
+    "agent_ownership",
+    "proof_format"
   ],
   "properties": {
     "id": { "type": "string", "pattern": "^US-[0-9]{3}$" },
@@ -18,6 +24,21 @@
     "lane": { "enum": ["tiny", "normal", "high-risk"] },
     "product_contract": { "type": "string" },
     "acceptance_criteria": { "type": "array", "items": { "type": "string" } },
-    "validation": { "type": "object" }
+    "definition_of_ready": { "type": "array", "items": { "type": "string" } },
+    "definition_of_done": { "type": "array", "items": { "type": "string" } },
+    "machine_readable_contract_links": { "type": "object" },
+    "edge_cases": { "type": "array", "items": { "type": "string" } },
+    "validation": { "type": "object" },
+    "agent_ownership": {
+      "type": "object",
+      "required": ["primary_agent", "allowed_files", "forbidden_files"],
+      "properties": {
+        "primary_agent": { "type": "string" },
+        "handoff_target": { "type": "string" },
+        "allowed_files": { "type": "array", "items": { "type": "string" } },
+        "forbidden_files": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "proof_format": { "type": "object" }
   }
 }

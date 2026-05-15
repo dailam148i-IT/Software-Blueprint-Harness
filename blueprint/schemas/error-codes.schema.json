@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Error Codes",
+  "type": "object",
+  "required": ["version", "errors"],
+  "properties": {
+    "version": { "type": "string" },
+    "errors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["code", "owner", "http_status", "user_message", "retryable", "linked_story"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+          "owner": { "type": "string" },
+          "http_status": { "type": "integer" },
+          "user_message": { "type": "string" },
+          "retryable": { "type": "boolean" },
+          "linked_story": { "type": "string", "pattern": "^US-[0-9]{3}$" }
+        }
+      }
+    }
+  }
+}

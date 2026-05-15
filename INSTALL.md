@@ -37,6 +37,7 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --yes
 ```bash
 blueprint status
 blueprint check
+blueprint lint --ci
 blueprint readiness
 ```
 

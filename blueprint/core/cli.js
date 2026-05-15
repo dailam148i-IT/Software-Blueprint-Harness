@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { templates, exampleTemplates, githubTemplates } from "./templates.js";
 import { parseSimpleYaml, stringifySimpleYaml } from "./simple-yaml.js";
-import { validateProject } from "./validation.js";
+import { lintProject, validateProject } from "./validation.js";
 import { indexReferences, statusReferences, syncReferences } from "./refs.js";
 import {
   createResearchPlan,
@@ -26,11 +26,17 @@ const REQUIRED_ARTIFACTS = [
   "docs/FEATURE_INTAKE.md",
   "docs/QUALITY_GATES.md",
   "docs/TEST_MATRIX.md",
+  "docs/TRACEABILITY_MATRIX.md",
+  "docs/EDGE_CASE_MATRIX.md",
   "docs/MEMORY.md",
   "docs/product/product-passport.yaml",
   "docs/product/prd.md",
   "docs/product/ux-spec.md",
   "docs/product/data-api-contract.md",
+  "docs/product/integration-protocol.md",
+  "docs/specs/state-machines.yaml",
+  "docs/specs/rbac.yaml",
+  "docs/specs/error-codes.yaml",
   "docs/architecture.md",
   "docs/epics/epics.md",
   "docs/readiness-review.md",
@@ -51,6 +57,7 @@ const COMMANDS = new Set([
   "doctor",
   "status",
   "check",
+  "lint",
   "readiness",
   "new-story",
   "new-decision",
@@ -92,6 +99,9 @@ export async function runCli(argv) {
       return;
     case "check":
       await commandCheck(parseOptions(rest));
+      return;
+    case "lint":
+      await commandLint(parseOptions(rest));
       return;
     case "readiness":
       await commandReadiness(parseOptions(rest));
@@ -137,6 +147,7 @@ Usage:
   blueprint --version
   blueprint status [--directory <path>]
   blueprint check [--directory <path>] [--strict]
+  blueprint lint [--directory <path>] [--strict] [--ci]
   blueprint readiness [--directory <path>] [--ci]
   blueprint new-story "Story title" [--directory <path>]
   blueprint new-decision "Decision title" [--directory <path>]
@@ -247,6 +258,34 @@ async function writeMany(root, files, options) {
   return results;
 }
 
+async function readDirectoryTemplates(relativeRoot) {
+  const absoluteRoot = path.join(repoRoot, relativeRoot);
+  const files = {};
+
+  async function walk(currentDir) {
+    let entries = [];
+    try {
+      entries = await fs.readdir(currentDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      const absolutePath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolutePath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const relativePath = path.relative(repoRoot, absolutePath).replaceAll("\\", "/");
+      files[relativePath] = await fs.readFile(absolutePath, "utf8");
+    }
+  }
+
+  await walk(absoluteRoot);
+  return files;
+}
+
 async function ensureTargetGitignore(root, options = {}) {
   const relativePath = ".gitignore";
   const target = path.join(root, relativePath);
@@ -281,6 +320,7 @@ async function commandInit(options) {
   const files = { ...templates };
   if (options["with-examples"]) {
     Object.assign(files, exampleTemplates);
+    Object.assign(files, await readDirectoryTemplates("examples"));
   }
   if (options["with-github"]) {
     Object.assign(files, githubTemplates);
@@ -426,6 +466,29 @@ async function commandCheck(options) {
   }
 }
 
+async function commandLint(options) {
+  const root = resolveDirectory(options);
+  const result = await lintProject(root, REQUIRED_ARTIFACTS);
+  const missing = result.missing;
+  const failures = result.failures;
+  const concerns = result.concerns;
+  const hasFailures = missing.length > 0 || failures.length > 0;
+  const status = hasFailures ? "FAIL" : concerns.length > 0 ? "PASS_WITH_CONCERNS" : "PASS";
+
+  console.log(`${status} blueprint production lint`);
+  for (const item of missing) console.log(`missing ${item}`);
+  for (const item of failures) console.log(`failure ${item}`);
+  for (const item of concerns) console.log(`concern ${item}`);
+
+  if (options.ci && status !== "PASS") {
+    process.exitCode = 1;
+  } else if (options.strict && (hasFailures || concerns.length > 0)) {
+    process.exitCode = 1;
+  } else if (hasFailures) {
+    process.exitCode = 1;
+  }
+}
+
 async function commandReadiness(options) {
   const root = resolveDirectory(options);
   const result = await validateProject(root, REQUIRED_ARTIFACTS, { readiness: true });
@@ -532,8 +595,14 @@ async function commandExportContext(options) {
 - docs/product/prd.md
 - docs/architecture.md
 - docs/product/data-api-contract.md
+- docs/product/integration-protocol.md
+- docs/specs/state-machines.yaml
+- docs/specs/rbac.yaml
+- docs/specs/error-codes.yaml
 - ${path.relative(root, storyFile).replaceAll("\\", "/")}
 - docs/TEST_MATRIX.md
+- docs/TRACEABILITY_MATRIX.md
+- docs/EDGE_CASE_MATRIX.md
 
 ## Story
 ${await readText(storyFile)}
@@ -1212,17 +1281,24 @@ After human approval, create or update:
 4. docs/product/ux-spec.md
 5. docs/architecture.md
 6. docs/product/data-api-contract.md
-7. docs/decisions/
-8. docs/epics/epics.md
-9. docs/stories/
-10. docs/TEST_MATRIX.md
-11. docs/readiness-review.md
-12. .blueprint/memory/
+7. docs/product/integration-protocol.md
+8. docs/specs/state-machines.yaml
+9. docs/specs/rbac.yaml
+10. docs/specs/error-codes.yaml
+11. docs/decisions/
+12. docs/epics/epics.md
+13. docs/stories/
+14. docs/TRACEABILITY_MATRIX.md
+15. docs/EDGE_CASE_MATRIX.md
+16. docs/TEST_MATRIX.md
+17. docs/readiness-review.md
+18. .blueprint/memory/
 
 ## Done
 - No TBD placeholders remain in implementation-critical docs.
 - Every story has acceptance criteria and validation proof.
 - Every high-risk area has an owner and gate output.
+- Every story has traceability from requirement to spec, edge case, test row, and evidence.
 `;
 }
 
@@ -1315,11 +1391,44 @@ Describe the behavior this story must make true.
 - docs/product/prd.md
 - docs/architecture.md
 - docs/product/data-api-contract.md
+- docs/product/integration-protocol.md
+- docs/specs/state-machines.yaml
+- docs/specs/rbac.yaml
+- docs/specs/error-codes.yaml
+- docs/TRACEABILITY_MATRIX.md
+- docs/EDGE_CASE_MATRIX.md
 
 ## Acceptance Criteria
 - Criterion 1.
 - Criterion 2.
 - Criterion 3.
+
+## Definition of Ready
+- Product contract is linked to PRD requirement IDs.
+- State, RBAC, error-code, and integration impacts are reviewed.
+- Edge cases are mapped or explicitly marked not applicable with rationale.
+- Acceptance criteria are testable.
+- Primary agent, allowed files, and forbidden files are assigned.
+- Proof format is clear enough for another agent to verify.
+
+## Definition of Done
+- Acceptance criteria are implemented within allowed scope.
+- Unit/integration/E2E/platform proof is captured or explicitly not applicable.
+- TEST_MATRIX row is updated with evidence.
+- TRACEABILITY_MATRIX row links requirement, story, spec, test, and evidence.
+- Memory and decisions are updated when product truth changes.
+- No forbidden files or modules were changed.
+
+## Machine-Readable Contract Links
+| Contract | Link or IDs |
+| --- | --- |
+| State machines | docs/specs/state-machines.yaml |
+| RBAC | docs/specs/rbac.yaml |
+| Error codes | docs/specs/error-codes.yaml |
+| Integration protocol | docs/product/integration-protocol.md |
+
+## Edge Cases
+Link rows from docs/EDGE_CASE_MATRIX.md or explain why none apply.
 
 ## Design Notes
 - Commands:
@@ -1339,9 +1448,16 @@ Describe the behavior this story must make true.
 | Release | |
 
 ## Agent Ownership
-- Primary agent:
-- Files/modules allowed:
-- Files/modules forbidden:
+- Primary agent: TBD
+- Handoff target: TBD
+- Files/modules allowed: TBD
+- Files/modules forbidden: TBD
+
+## Proof Format
+- Commands to run:
+- Expected output:
+- Evidence path:
+- Reviewer:
 
 ## Harness Delta
 Document any harness updates made or proposed because of this story.
