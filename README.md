@@ -45,12 +45,23 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness check --directory .
 npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 ```
 
+## Simplest Workflow
+
+Start with one product prompt:
+
+```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I need to build a student management web app" --directory . --depth deep
+```
+
+That creates a guided intake package with questions, refs/research plan, multi-agent plan, verification gate, human approval file, and documentation workplan.
+
 ## CLI
 
 ```bash
 blueprint --version
 blueprint doctor
 blueprint init --directory . --yes
+blueprint start "I need to build a student management web app" --depth deep
 blueprint status
 blueprint check
 blueprint readiness
@@ -76,6 +87,7 @@ Fresh GitHub installs run `blueprint check` without strict mode so a new repo ca
 ## Documentation
 
 - [Quickstart](docs/QUICKSTART.md)
+- [Simple Prompt Workflow](docs/SIMPLE_PROMPT_WORKFLOW.md)
 - [Usage Guide](docs/USAGE.md)
 - [CLI Commands](docs/COMMANDS.md)
 - [Research Pipeline](docs/RESEARCH_PIPELINE.md)
@@ -96,6 +108,7 @@ docs/
   WORKFLOW.md
   FEATURE_INTAKE.md
   QUALITY_GATES.md
+  SIMPLE_PROMPT_WORKFLOW.md
   RESEARCH_PIPELINE.md
   PROMPTS_END_TO_END.md
   PRODUCTION_V1.md

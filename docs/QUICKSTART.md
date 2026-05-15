@@ -41,6 +41,12 @@ Example:
 I want to build a website for managing students at a training center.
 ```
 
+Use the one-command start flow:
+
+```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I want to build a website for managing students at a training center" --directory . --depth deep
+```
+
 The harness should produce or guide you toward:
 
 - Product Passport

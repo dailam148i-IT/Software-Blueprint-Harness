@@ -2,6 +2,23 @@
 
 Use these prompts with a coding agent after installing Software Blueprint Harness. The goal is to move from raw product idea to implementation-ready story packets without starting code too early.
 
+## Simplified Entry
+
+Use this first when you want the harness to lead the process:
+
+```text
+/blueprint-start
+I need to build: <app, web, SaaS, automation, or feature>.
+
+First ask only the necessary questions. Then run deep refs/research with multi-agent review, create a multi-agent plan, ask verifier agents to check it, stop for human approval, and only after approval write the full documentation set.
+```
+
+CLI equivalent:
+
+```bash
+blueprint start "I need to build a student management web app" --depth deep
+```
+
 ## 0. Install The Harness
 
 ```text

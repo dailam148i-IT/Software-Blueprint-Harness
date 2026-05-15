@@ -76,6 +76,25 @@ test("story and context packet generation work", async () => {
   });
 });
 
+test("start creates simple prompt workflow package", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const output = await capture(() =>
+      runCli(["start", "I need to build a student management web app", "--directory", root, "--depth", "quick"])
+    );
+    assert.match(output, /ask these first/i);
+    const latest = JSON.parse(await fs.readFile(path.join(root, ".blueprint/intake/latest.json"), "utf8"));
+    assert.match(latest.idea, /student management/);
+    assert.equal(latest.approval_status, "PENDING");
+    assert.equal(await exists(path.join(root, latest.intake_dir, "01-questions.md")), true);
+    assert.equal(await exists(path.join(root, latest.intake_dir, "02-multi-agent-plan.md")), true);
+    assert.equal(await exists(path.join(root, latest.intake_dir, "04-human-approval.md")), true);
+    assert.equal(await exists(path.join(root, latest.intake_dir, "orchestrator-prompt.md")), true);
+    assert.equal(await exists(path.join(root, latest.research_dir, "plan.md")), true);
+    assert.equal(await exists(path.join(root, `docs/intake/${latest.run_id}.md`)), true);
+  });
+});
+
 test("extension hook runner creates declared artifacts", async () => {
   await withTempProject(async (root) => {
     await runCli(["init", "--directory", root, "--yes"]);

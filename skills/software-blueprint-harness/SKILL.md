@@ -13,6 +13,7 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 
 ## Modes
 
+- `blueprint-start`: accept one product prompt, ask only necessary questions, create research plan, multi-agent plan, verification gate, and human approval stop.
 - `blueprint-intake`: classify input type, track, risk lane, missing decisions.
 - `blueprint-research`: research domain, users, competitors, tech options, risks.
 - `blueprint-product`: create Product Passport and PRD.
@@ -26,12 +27,14 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 ## Workflow
 
 1. Inspect existing `AGENTS.md`, `docs/`, `.blueprint/`, and `blueprint.config.yaml`.
-2. Do not ask questions that can be answered from existing artifacts.
-3. For new input, run intake first.
-4. Ask only high-impact product or tradeoff questions.
-5. Create or update the smallest relevant artifacts.
-6. Keep product docs, stories, decisions, test matrix, and memory aligned.
-7. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
+2. For a raw app/web idea, prefer `blueprint start "<idea>"` or create the same intake package manually.
+3. Do not ask questions that can be answered from existing artifacts or research.
+4. For new input, run intake first.
+5. Ask only high-impact product or tradeoff questions.
+6. Create or update the smallest relevant artifacts.
+7. Stop for human approval before writing the full documentation set when the plan is not yet approved.
+8. Keep product docs, stories, decisions, test matrix, and memory aligned.
+9. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
 
 ## Gates
 

@@ -47,6 +47,7 @@ const TARGET_GITIGNORE_ENTRIES = ["refs/vendor/", "refs/REFS_LOCK.json"];
 const COMMANDS = new Set([
   "help",
   "init",
+  "start",
   "doctor",
   "status",
   "check",
@@ -78,6 +79,9 @@ export async function runCli(argv) {
       return;
     case "init":
       await commandInit(parseOptions(rest));
+      return;
+    case "start":
+      await commandStart(parseOptions(rest));
       return;
     case "doctor":
       await commandDoctor(parseOptions(rest));
@@ -126,6 +130,7 @@ function printHelp() {
 
 Usage:
   blueprint init [--directory <path>] [--dry-run] [--merge] [--override] [--yes] [--with-github] [--with-examples]
+  blueprint start "I want to build ..." [--directory <path>] [--depth quick|standard|deep] [--run-research]
   blueprint doctor [--directory <path>] [--ci]
   blueprint --version
   blueprint status [--directory <path>]
@@ -282,6 +287,70 @@ async function commandInit(options) {
   const results = await writeMany(root, files, options);
   results.push(...(await ensureTargetGitignore(root, options)));
   printWriteResults(root, results, options);
+}
+
+async function commandStart(options) {
+  const root = resolveDirectory(options);
+  const idea = (options.idea || options._.join(" ")).trim();
+  if (!idea) {
+    throw new Error('start requires an idea, for example: blueprint start "I want to build a student management app".');
+  }
+
+  const depth = options.depth || "deep";
+  const runId = workflowRunId(idea);
+  const intakeRoot = path.join(root, ".blueprint/intake", runId);
+  const docsIntakeRoot = path.join(root, "docs/intake");
+  const questions = intakeQuestions(idea);
+  let researchPath = `.blueprint/research/runs/${runId}`;
+  if (!options["dry-run"]) {
+    const research = options["run-research"]
+      ? await runResearch({ repoRoot, targetRoot: root, topic: idea, depth })
+      : await createResearchPlan({ targetRoot: root, topic: idea, depth });
+    researchPath = path.relative(root, research.runDir).replaceAll("\\", "/");
+  }
+
+  const files = {
+    "00-raw-input.md": rawInputTemplate({ idea, runId }),
+    "01-questions.md": questionsTemplate({ idea, questions }),
+    "02-multi-agent-plan.md": multiAgentPlanTemplate({ idea, researchPath }),
+    "03-verification-gate.md": verificationGateTemplate({ idea }),
+    "04-human-approval.md": humanApprovalTemplate({ idea }),
+    "05-documentation-workplan.md": documentationWorkplanTemplate({ idea }),
+    "orchestrator-prompt.md": orchestratorPromptTemplate({ idea, questions, researchPath }),
+    "next-commands.md": nextCommandsTemplate({ idea, depth })
+  };
+
+  if (!options["dry-run"]) {
+    await fs.mkdir(intakeRoot, { recursive: true });
+    await fs.mkdir(docsIntakeRoot, { recursive: true });
+    for (const [file, content] of Object.entries(files)) {
+      await fs.writeFile(path.join(intakeRoot, file), content, "utf8");
+    }
+    await fs.writeFile(path.join(docsIntakeRoot, `${runId}.md`), startSummaryTemplate({ idea, runId, questions, researchPath }), "utf8");
+    await fs.writeFile(
+      path.join(root, ".blueprint/intake/latest.json"),
+      `${JSON.stringify(
+        {
+          run_id: runId,
+          idea,
+          intake_dir: path.relative(root, intakeRoot).replaceAll("\\", "/"),
+          research_dir: researchPath,
+          approval_status: "PENDING"
+        },
+        null,
+        2
+      )}\n`,
+      "utf8"
+    );
+  }
+
+  console.log(`${options["dry-run"] ? "would create" : "created"} .blueprint/intake/${runId}`);
+  console.log(`${options["run-research"] ? "research run" : "research plan"} ${researchPath}`);
+  console.log("ask these first:");
+  questions.slice(0, 5).forEach((question, index) => {
+    console.log(`${index + 1}. ${question}`);
+  });
+  console.log("human gate: review 04-human-approval.md before documentation writing.");
 }
 
 function printWriteResults(root, results, options) {
@@ -980,6 +1049,252 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 72);
+}
+
+function workflowRunId(idea) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "Z");
+  return `${stamp}-${slugify(idea).slice(0, 40) || "product-start"}`;
+}
+
+function intakeQuestions(idea) {
+  const normalized = normalizeText(idea);
+  const questions = [
+    "Who are the primary users and which roles must exist in the MVP?",
+    "What is the smallest useful MVP workflow from start to finish?",
+    "Which data is sensitive, private, regulated, or dangerous to lose?",
+    "Which actions require login, permissions, approval, audit logs, or admin control?",
+    "What integrations, imports, payments, notifications, or external systems are required?",
+    "Where should this run first: local, web, mobile, desktop, internal server, cloud, or SaaS?",
+    "Which matters most for the first release: speed, cost, maintainability, scale, security, or polish?",
+    "Do you already prefer a technology stack, database, hosting provider, UI style, or design system?",
+    "What does success look like in measurable terms after the first release?",
+    "What is explicitly out of scope for version 1?"
+  ];
+
+  if (/student|class|attendance|tuition|school|training/.test(normalized)) {
+    questions.splice(2, 0, "Do students, teachers, parents, and admins all log in, or is this staff-only?");
+    questions.splice(5, 0, "Is tuition only tracked internally, or does the product process payments?");
+  }
+  if (/shop|commerce|payment|booking|order/.test(normalized)) {
+    questions.splice(4, 0, "Which payment, booking, inventory, refund, or order states must be supported in MVP?");
+  }
+  if (/ai|agent|automation|workflow/.test(normalized)) {
+    questions.splice(4, 0, "Which decisions can the automation make by itself, and which require human approval?");
+  }
+
+  return [...new Set(questions)].slice(0, 12);
+}
+
+function rawInputTemplate({ idea, runId }) {
+  return `# Raw Product Input
+
+Run: ${runId}
+Created: ${new Date().toISOString()}
+
+## User Prompt
+${idea}
+
+## Rule
+Do not write implementation code from this input. Convert it into questions, research, a multi-agent plan, verification, human approval, and then full documentation.
+`;
+}
+
+function questionsTemplate({ idea, questions }) {
+  return `# Clarifying Questions
+
+Idea: ${idea}
+
+Ask only these questions first. Do not ask questions that reference research or project docs can answer.
+
+${questions.map((question, index) => `${index + 1}. ${question}`).join("\n")}
+
+## Answer Format
+
+\`\`\`text
+Q1: ...
+Q2: ...
+Q3: ...
+\`\`\`
+`;
+}
+
+function multiAgentPlanTemplate({ idea, researchPath }) {
+  return `# Multi-Agent Plan
+
+Idea: ${idea}
+Research context: ${researchPath}
+
+## Stage 1: Orchestrator
+- Read raw input and answers.
+- Classify product type, risk lane, and missing decisions.
+- Keep implementation blocked.
+
+## Stage 2: Research Agents
+- Reference research agent: use refs and research outputs.
+- Domain research agent: identify common product modules, risks, and patterns.
+- Technology research agent: compare stack options only after product intent is clear.
+
+## Stage 3: Planning Agents
+- Product agent: Product Passport and PRD.
+- UX agent: flows, screens, states, accessibility.
+- Architect agent: stack options, module boundaries, deployment.
+- Data/API agent: entities, commands, queries, permissions.
+- Scrum planner: epics, stories, dependencies.
+- QA agent: test matrix and evidence expectations.
+- Risk reviewer: security, privacy, cost, accessibility, performance.
+
+## Stage 4: Verification Agents
+- Consistency reviewer: checks contradictions across docs.
+- Evidence reviewer: checks research claims have source evidence.
+- Readiness reviewer: checks no placeholder can pass.
+
+## Stage 5: Human Approval
+Human approves the plan before documentation writing proceeds.
+
+## Stage 6: Documentation Production
+Agents write full docs only after approval, then run readiness.
+`;
+}
+
+function verificationGateTemplate({ idea }) {
+  return `# Verification Gate
+
+Idea: ${idea}
+
+## Verify Before Human Approval
+- Questions are answered or marked as assumptions.
+- Research has source inventory, findings, claim map, and synthesis.
+- Plan names agents, outputs, dependencies, and forbidden actions.
+- Security/privacy/data risks are explicit.
+- Technology choice is proposed, not silently locked.
+- Documentation outputs are listed.
+- Implementation remains blocked.
+
+## Status
+PENDING_VERIFICATION
+`;
+}
+
+function humanApprovalTemplate({ idea }) {
+  return `# Human Approval
+
+Idea: ${idea}
+
+Human approval is required before agents write the full product document set.
+
+## Decision
+APPROVED_FOR_DOCUMENTATION: no
+
+## Human Notes
+- Pending.
+
+## Approval Criteria
+- The clarifying questions are answered enough for planning.
+- Research and assumptions are acceptable.
+- The multi-agent plan is understandable.
+- The technology decision process is acceptable.
+- The requested document outputs are correct.
+`;
+}
+
+function documentationWorkplanTemplate({ idea }) {
+  return `# Documentation Workplan
+
+Idea: ${idea}
+
+After human approval, create or update:
+
+1. docs/product/product-passport.yaml
+2. docs/research/latest-reference-synthesis.md
+3. docs/product/prd.md
+4. docs/product/ux-spec.md
+5. docs/architecture.md
+6. docs/product/data-api-contract.md
+7. docs/decisions/
+8. docs/epics/epics.md
+9. docs/stories/
+10. docs/TEST_MATRIX.md
+11. docs/readiness-review.md
+12. .blueprint/memory/
+
+## Done
+- No TBD placeholders remain in implementation-critical docs.
+- Every story has acceptance criteria and validation proof.
+- Every high-risk area has an owner and gate output.
+`;
+}
+
+function orchestratorPromptTemplate({ idea, questions, researchPath }) {
+  return `# /blueprint-start Orchestrator Prompt
+
+\`\`\`text
+/blueprint-start
+I need to build: ${idea}
+
+Rules:
+- Do not code yet.
+- Ask only the necessary questions below first.
+- Use refs/research for deep research after answers are available.
+- Create a multi-agent plan.
+- Ask verifier agents to review the plan.
+- Stop for human approval.
+- After approval, write the full documentation set.
+
+Questions:
+${questions.map((question, index) => `${index + 1}. ${question}`).join("\n")}
+
+Research context:
+${researchPath}
+\`\`\`
+`;
+}
+
+function nextCommandsTemplate({ idea, depth }) {
+  return `# Next Commands
+
+If reference repositories are not synced:
+
+\`\`\`bash
+blueprint refs sync --dry-run
+blueprint refs sync
+blueprint refs status
+blueprint refs index
+\`\`\`
+
+Run or refresh research:
+
+\`\`\`bash
+blueprint research run --topic "${idea.replaceAll('"', '\\"')}" --depth ${depth}
+blueprint research report
+blueprint research validate
+\`\`\`
+
+After human approval:
+
+\`\`\`bash
+blueprint readiness
+blueprint memory update
+blueprint memory compact
+\`\`\`
+`;
+}
+
+function startSummaryTemplate({ idea, runId, questions, researchPath }) {
+  return `# Intake Summary
+
+Run: ${runId}
+Idea: ${idea}
+Research context: ${researchPath}
+
+## First Questions
+${questions.map((question, index) => `${index + 1}. ${question}`).join("\n")}
+
+## Simple Flow
+Prompt -> questions -> deep research -> multi-agent plan -> verifier agents -> human approval -> full docs -> readiness -> implementation handoff.
+
+## Approval File
+.blueprint/intake/${runId}/04-human-approval.md
+`;
 }
 
 function storyTemplate(id, title) {

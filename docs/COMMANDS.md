@@ -34,6 +34,25 @@ Options:
 
 `init` also ensures `.gitignore` contains `refs/vendor/` and `refs/REFS_LOCK.json` so synced reference repositories are not committed by accident.
 
+## `blueprint start`
+
+Creates the simple prompt workflow package from one product idea.
+
+```bash
+blueprint start "I need to build a student management web app" --depth deep
+blueprint start "I need to build a student management web app" --depth deep --run-research
+```
+
+Outputs:
+
+```text
+.blueprint/intake/<run-id>/
+docs/intake/<run-id>.md
+.blueprint/research/runs/<run-id>/plan.md
+```
+
+The package contains clarifying questions, a multi-agent plan, a verification gate, a human approval file, a documentation workplan, and a ready-to-use `/blueprint-start` orchestrator prompt.
+
 ## `blueprint status`
 
 Summarizes project stage, track, risk, readiness, and required artifacts.

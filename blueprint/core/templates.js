@@ -140,6 +140,25 @@ Compress: AGENTS.md summaries, agent briefs, story summaries, status summaries, 
 
 Do not over-compress: security warnings, irreversible action confirmations, API/schema contracts, acceptance criteria, complex setup steps.
 `,
+  "docs/SIMPLE_PROMPT_WORKFLOW.md": `# Simple Prompt Workflow
+
+Use one prompt to start:
+
+\`\`\`text
+/blueprint-start
+I need to build: <app, website, SaaS, automation, or feature>.
+\`\`\`
+
+The orchestrator should ask only necessary questions, run refs/research, create a multi-agent plan, ask verifier agents to review, stop for human approval, and then write full documentation.
+
+CLI shortcut:
+
+\`\`\`bash
+blueprint start "I need to build a student management web app" --depth deep
+\`\`\`
+
+The command creates \`.blueprint/intake/<run-id>/\`, \`docs/intake/<run-id>.md\`, and a research plan.
+`,
   "docs/RESEARCH_PIPELINE.md": `# Research Pipeline
 
 Use refs and research commands to turn source repositories into evidence-backed decisions.
