@@ -53,9 +53,9 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 2. Tell your agent to learn the process.
 3. Start with `/start <your product idea>`.
 4. Answer the intake questions.
-5. Review and approve the plan.
-6. Let the agent write the full docs.
-7. Run `blueprint lint --ci` and `blueprint readiness`.
+5. Run `start-deep` for the professional document set.
+6. Review and `approve` the plan.
+7. Run `blueprint assess`, `blueprint lint --ci`, and `blueprint readiness`.
 
 After install, tell your agent:
 
@@ -72,10 +72,12 @@ Then start with one product prompt:
 CLI equivalent:
 
 ```bash
-npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I need to build a student management web app" --directory . --depth deep
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start-base "I need to build a student management web app" --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start-deep --from-latest --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness approve --from-latest --yes --directory .
 ```
 
-That creates a guided intake package with questions, refs/research plan, multi-agent plan, verification gate, human approval file, and documentation workplan.
+`start` and `/start` are aliases for `start-base`. Every workflow command prints a next command and a suggested prompt, and stores the same guidance in `.blueprint/next.json`.
 
 ## CLI
 
@@ -83,7 +85,11 @@ That creates a guided intake package with questions, refs/research plan, multi-a
 blueprint --version
 blueprint doctor
 blueprint init --directory . --yes
-blueprint start "I need to build a student management web app" --depth deep
+blueprint start-base "I need to build a student management web app"
+blueprint start-deep --from-latest
+blueprint approve --from-latest --yes
+blueprint next
+blueprint assess --ci --min-score 80
 blueprint status
 blueprint check
 blueprint explain-fail
@@ -159,8 +165,33 @@ docs/
   EDGE_CASE_MATRIX.md
   MEMORY.md
   product/
+    project-brief.md
+    feature-map.md
+    mvp-scope.md
+    product-passport.yaml
+    prd.md
+    ux-spec.md
+    data-api-contract.md
     integration-protocol.md
+  frontend/
+    design-system.md
+    component-architecture.md
+    page-flow.md
+    seo.md
+  backend/
+    backend-architecture.md
+    api-guidelines.md
+    database-schema.md
+    error-handling.md
+  security/
+    security-privacy-seo.md
+  delivery/
+    DELIVERY_PLAN.md
+  engineering/
+    ENGINEERING_STANDARDS.md
   specs/
+    project-blueprint.yaml
+    engineering-standards.yaml
     state-machines.yaml
     rbac.yaml
     error-codes.yaml

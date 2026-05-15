@@ -4,5 +4,7 @@ audit-test/
 usage-test/
 refs/vendor/
 refs/REFS_LOCK.json
+.blueprint/next.json
+examples/demo-student-management/.blueprint/next.json
 .DS_Store
 *.log

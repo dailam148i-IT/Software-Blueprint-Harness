@@ -21,7 +21,10 @@ First ask only the necessary questions. Then run deep refs/research with multi-a
 CLI equivalent:
 
 ```bash
-blueprint start "I need to build a student management web app" --depth deep
+blueprint start-base "I need to build a student management web app"
+blueprint start-deep --from-latest
+blueprint approve --from-latest --yes
+blueprint assess --ci --min-score 80
 ```
 
 ## 0. Install The Harness
@@ -54,6 +57,27 @@ Good user input example:
 
 ```text
 I want a web app for managing students, classes, attendance, tuition, and staff permissions for a training center.
+```
+
+Expected command:
+
+```bash
+blueprint start-base "<product idea>"
+blueprint next
+```
+
+## 1.5 Professional Deep Plan
+
+```text
+Using the answered base questions, create the professional deep plan. Split large information into product, frontend, backend, API, security, delivery, engineering, specs, epics, and stories. Do not code.
+```
+
+Expected commands:
+
+```bash
+blueprint start-deep --from-latest
+blueprint approve --from-latest --yes
+blueprint assess --ci --min-score 80
 ```
 
 ## 2. Research Plan

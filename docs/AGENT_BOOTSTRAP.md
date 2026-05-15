@@ -47,13 +47,14 @@ User message:
 Agent behavior:
 
 1. Extract the idea after `/start`.
-2. Run `blueprint start "<idea>" --depth deep` if available.
+2. Run `blueprint start-base "<idea>"` if available.
 3. Ask the generated clarifying questions.
-4. Prepare refs/research.
-5. Create the multi-agent plan.
-6. Ask verifier agents to review the plan.
+4. Prepare refs/research as needed.
+5. After answers, run `blueprint start-deep --from-latest`.
+6. Ask verifier agents to review the professional plan.
 7. Stop for human approval.
-8. After approval, write the full documentation set to the Artifact Depth Standard.
+8. Record approval with `blueprint approve --from-latest --yes`.
+9. Run `blueprint assess`, `blueprint lint --ci`, and `blueprint readiness`.
 
 ## Step 4: Human Approves
 
@@ -69,12 +70,19 @@ Required approval:
 APPROVED_FOR_DOCUMENTATION: yes
 ```
 
+CLI approval:
+
+```bash
+blueprint approve --from-latest --yes
+```
+
 ## Step 5: Documentation, Then Readiness
 
 After approval, agents write docs and run:
 
 ```bash
 blueprint explain-fail
+blueprint assess --ci --min-score 80
 blueprint lint --ci
 blueprint readiness
 blueprint memory update

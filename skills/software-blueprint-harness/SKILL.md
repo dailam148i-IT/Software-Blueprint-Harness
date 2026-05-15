@@ -14,6 +14,10 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 ## Modes
 
 - `blueprint-start`: accept one product prompt, ask only necessary questions, create research plan, multi-agent plan, verification gate, and human approval stop.
+- `blueprint-start-base`: create base discovery, MVP/scope/risk questions, and next prompt.
+- `blueprint-start-deep`: create professional product/frontend/backend/API/security/SEO/engineering/delivery docs.
+- `blueprint-approve`: record human approval before lint/readiness.
+- `blueprint-assess`: run advisory PM/BA/UX/frontend/backend/API/security/QA/DevOps scoring.
 - `blueprint-intake`: classify input type, track, risk lane, missing decisions.
 - `blueprint-research`: research domain, users, competitors, tech options, risks.
 - `blueprint-product`: create Product Passport and PRD.
@@ -29,7 +33,7 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 
 1. Inspect existing `AGENTS.md`, `docs/`, `.blueprint/`, and `blueprint.config.yaml`.
 2. When the user says "nắm quy trình", read `AGENTS.md`, `docs/AGENT_BOOTSTRAP.md`, and `docs/SIMPLE_PROMPT_WORKFLOW.md`, then confirm the process briefly.
-3. When the user sends `/start <idea>`, prefer `blueprint start "<idea>"` or create the same intake package manually.
+3. When the user sends `/start <idea>`, prefer `blueprint start-base "<idea>"` or create the same intake package manually.
 4. Read `docs/ARTIFACT_DEPTH_STANDARD.md` before writing the full documentation set.
 5. Use `docs/EXAMPLE_COMPARISON.md` to avoid shallow-but-plausible output.
 6. Use `docs/COMMERCE_RISK_PLAYBOOK.md` when payment, shipping, inventory, auth, provider, or privacy risk exists.
@@ -37,9 +41,11 @@ Do not implement code until `docs/readiness-review.md` says `READY_FOR_IMPLEMENT
 8. For new input, run intake first.
 9. Ask only high-impact product or tradeoff questions.
 10. Create or update the smallest relevant artifacts.
-11. Stop for human approval before writing the full documentation set when the plan is not yet approved.
-12. Keep product docs, specs, stories, decisions, traceability, edge cases, test matrix, and memory aligned.
-13. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
+11. After base answers, run or follow `blueprint start-deep --from-latest` before full documentation.
+12. Stop for human approval and record it with `blueprint approve --from-latest --yes` when approved.
+13. Keep product docs, frontend/backend/API/security standards, specs, stories, decisions, traceability, edge cases, test matrix, and memory aligned.
+14. Use concise agent-facing docs; keep human-facing docs clear and explanatory.
+15. Use `blueprint next` when the user or agent needs the next suggested prompt.
 
 ## Gates
 
@@ -60,7 +66,7 @@ Block implementation when:
 - Risk reviewer has unresolved `FAIL`.
 - High-risk flags exist without the required security/privacy/data review.
 
-Run `blueprint explain-fail`, `blueprint lint --ci`, and `blueprint readiness` before implementation when the CLI is available.
+Run `blueprint assess`, `blueprint explain-fail`, `blueprint lint --ci`, and `blueprint readiness` before implementation when the CLI is available.
 
 `READY_WITH_ACCEPTED_RISK` is a human approval stop. Do not treat it as an automatic implementation pass unless the user records explicit concern acceptance with owner, impact, expiry, and rollback note.
 

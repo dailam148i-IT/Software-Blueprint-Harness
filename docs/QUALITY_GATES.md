@@ -20,6 +20,7 @@ Gate statuses:
 - Story Gate
 - Trace Gate
 - Agent Gate
+- Advisory Assessment Gate
 - Pre-Code Gate
 
 Implementation starts only when the Pre-Code Gate says `READY_FOR_IMPLEMENTATION`. If readiness says `READY_WITH_ACCEPTED_RISK`, implementation is still blocked until a human accepts every concern with owner, impact, expiry, and rollback note.
@@ -31,8 +32,11 @@ Run:
 ```bash
 blueprint lint --ci
 blueprint explain-fail
+blueprint assess --ci --min-score 80
 ```
 
 This gate checks that implementation-critical docs have no placeholders, machine-readable specs exist, edge-case rows are assigned, story packets have ownership and file boundaries, and every story maps to test/evidence expectations.
 
 The gate also rejects shallow artifacts: PRD without stable requirement IDs, test matrix with yes/no cells, simulated research treated as evidence, and status drift between Product Passport and `.blueprint/status.json`.
+
+`blueprint assess` is advisory by default. It becomes a gate only when teams opt into `--ci --min-score`.

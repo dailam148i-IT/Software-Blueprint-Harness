@@ -5,7 +5,7 @@
   "required": ["status", "blockers", "concerns", "required_before_code"],
   "properties": {
     "status": {
-      "enum": ["READY_FOR_IMPLEMENTATION", "PASS_WITH_CONCERNS", "FAIL", "BLOCKED", "NOT_READY"]
+      "enum": ["READY_FOR_IMPLEMENTATION", "READY_WITH_ACCEPTED_RISK", "NOT_READY"]
     },
     "blockers": { "type": "array", "items": { "type": "string" } },
     "concerns": { "type": "array", "items": { "type": "string" } },

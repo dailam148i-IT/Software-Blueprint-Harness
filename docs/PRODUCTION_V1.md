@@ -23,6 +23,10 @@ Software Blueprint Harness reaches production v1 when it can be installed, audit
 - Reference indexing and research synthesis with evidence.
 - End-to-end prompt guide for product discovery through implementation handoff.
 - Automated tests for install, check, readiness, memory, refs, research, extensions, and GitHub export.
+- Two-stage start workflow: `start-base` for discovery and `start-deep` for professional documentation.
+- Human `approve` command before hard gates.
+- Next-prompt guidance through `.blueprint/next.json`.
+- Advisory role assessment for PM, BA, UX, frontend, backend, API, security, QA, and DevOps.
 
 ## Release Checklist
 
@@ -33,13 +37,14 @@ Software Blueprint Harness reaches production v1 when it can be installed, audit
 5. Run `node bin/blueprint.js doctor`.
 6. Run `node bin/blueprint.js init --dry-run --with-github --with-examples`.
 7. Run `node bin/blueprint.js lint --directory examples/demo-student-management --ci`.
-8. Run `blueprint explain-fail` on a known shallow project and confirm repair hints are actionable.
-9. Run `blueprint refs status`.
-10. Run `blueprint refs index`.
-11. Run `blueprint research run --depth quick`.
-12. Run `blueprint research validate`.
-13. Confirm README, INSTALL, COMMANDS, USAGE, PROMPTS, artifact depth docs, and examples are current.
-14. Tag release with a changelog.
+8. Run `node bin/blueprint.js assess --directory examples/demo-student-management --ci --min-score 80`.
+9. Run `blueprint explain-fail` on a known shallow project and confirm repair hints are actionable.
+10. Run `blueprint refs status`.
+11. Run `blueprint refs index`.
+12. Run `blueprint research run --depth quick`.
+13. Run `blueprint research validate`.
+14. Confirm README, INSTALL, COMMANDS, USAGE, PROMPTS, artifact depth docs, and examples are current.
+15. Tag release with a changelog.
 
 ## Known V1 Limits
 

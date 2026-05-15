@@ -13,14 +13,14 @@ When the user sends:
 \`\`\`
 
 do not code. Treat it as a blueprint-start request:
-1. Create or refresh the intake package with \`blueprint start "<idea>" --depth deep\` when the CLI is available.
+1. Create or refresh the intake package with \`blueprint start-base "<idea>"\` when the CLI is available.
 2. Ask only the necessary clarifying questions.
 3. Run or plan refs/research.
-4. Create a multi-agent plan.
-5. Ask verifier agents to review the plan.
+4. After answers, run \`blueprint start-deep --from-latest\`.
+5. Ask verifier agents to review the professional plan.
 6. Stop for human approval.
-7. After approval, write the full documentation set.
-8. Run readiness before implementation.
+7. Record approval with \`blueprint approve --from-latest --yes\`.
+8. Run assess, lint, and readiness before implementation.
 
 ## Read Order
 1. README.md
@@ -32,19 +32,25 @@ do not code. Treat it as a blueprint-start request:
 7. docs/EXAMPLE_COMPARISON.md
 8. docs/COMMERCE_RISK_PLAYBOOK.md when payment, shipping, inventory, auth, or provider risk exists
 9. docs/product/product-passport.yaml
-10. docs/product/prd.md
-11. docs/architecture.md
-12. docs/product/data-api-contract.md
-13. docs/product/integration-protocol.md
-14. docs/specs/state-machines.yaml
-15. docs/specs/rbac.yaml
-16. docs/specs/error-codes.yaml
-17. docs/stories/
-18. docs/TRACEABILITY_MATRIX.md
-19. docs/EDGE_CASE_MATRIX.md
-20. docs/TEST_MATRIX.md
-21. docs/decisions/
-22. .blueprint/memory/project-memory.yaml
+10. docs/product/project-brief.md
+11. docs/product/feature-map.md
+12. docs/product/mvp-scope.md
+13. docs/product/prd.md
+14. docs/frontend/
+15. docs/backend/
+16. docs/security/security-privacy-seo.md
+17. docs/engineering/ENGINEERING_STANDARDS.md
+18. docs/delivery/DELIVERY_PLAN.md
+19. docs/architecture.md
+20. docs/product/data-api-contract.md
+21. docs/product/integration-protocol.md
+22. docs/specs/
+23. docs/stories/
+24. docs/TRACEABILITY_MATRIX.md
+25. docs/EDGE_CASE_MATRIX.md
+26. docs/TEST_MATRIX.md
+27. docs/decisions/
+28. .blueprint/memory/project-memory.yaml
 
 ## Task Loop
 1. Classify the request: new spec, spec slice, change request, initiative, maintenance, or harness improvement.
@@ -83,6 +89,10 @@ Start here:
 \`\`\`bash
 blueprint status
 blueprint check
+blueprint start-base "your product idea"
+blueprint start-deep --from-latest
+blueprint approve --from-latest --yes
+blueprint assess
 blueprint lint --ci
 blueprint readiness
 \`\`\`
@@ -207,14 +217,14 @@ Example:
 Agent behavior:
 
 1. Extract the idea after \`/start\`.
-2. Run \`blueprint start "<idea>" --depth deep\` if the CLI is available.
+2. Run \`blueprint start-base "<idea>"\` if the CLI is available.
 3. If the CLI is not available, manually create the same artifacts listed in docs/SIMPLE_PROMPT_WORKFLOW.md.
 4. Ask only the questions in the generated \`01-questions.md\`.
 5. Do not write PRD, architecture, stories, or code yet.
 6. Run or schedule refs/research.
-7. Create or present the multi-agent plan.
+7. After answers, run \`blueprint start-deep --from-latest\`.
 8. Run verifier review.
-9. Stop at human approval.
+9. Stop at human approval and record \`blueprint approve --from-latest --yes\`.
 
 ## After Human Approval
 
@@ -222,8 +232,10 @@ Only after approval, write the full documentation set:
 
 - Product Passport
 - Research synthesis
+- Project brief, feature map, MVP scope
 - PRD
 - UX spec
+- Frontend/backend/security/engineering/delivery standards
 - Architecture
 - Data/API contract
 - Decision records
@@ -250,7 +262,9 @@ The orchestrator should ask only necessary questions, run refs/research, create 
 CLI shortcut:
 
 \`\`\`bash
-blueprint start "I need to build a student management web app" --depth deep
+blueprint start-base "I need to build a student management web app"
+blueprint start-deep --from-latest
+blueprint approve --from-latest --yes
 \`\`\`
 
 The command creates \`.blueprint/intake/<run-id>/\`, \`docs/intake/<run-id>.md\`, and a research plan.
@@ -360,12 +374,12 @@ This file makes failure behavior explicit before implementation.
 
 | Flow | Trigger | Expected behavior | Owner | Story | Test | Evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Payment callback | Provider sends duplicate callback | Operation is idempotent; duplicate is recorded and ignored safely. | TBD | US-000 | Integration | none | planned |
-| Payment callback | Provider sends late callback after timeout/cancel | Callback is reconciled against current state and cannot reopen closed work without a decision. | TBD | US-000 | Integration | none | planned |
-| Checkout | Item becomes out of stock or unavailable during checkout | User sees recoverable error; no payment capture or inconsistent reservation remains. | TBD | US-000 | E2E | none | planned |
-| Refund/cancel | User or admin cancels after payment attempt | State transition, refund/cancel command, and audit log are deterministic. | TBD | US-000 | Integration | none | planned |
-| Payment timeout | Payment remains pending past timeout window | Pending state expires, retry/reconcile job handles provider uncertainty, user receives clear status. | TBD | US-000 | Integration | none | planned |
-| Provider outage | External provider is unavailable | Request retries according to policy, then dead-letters with alert and manual recovery path. | TBD | US-000 | Platform | none | planned |
+| Duplicate submit | User submits the same action twice | Operation is idempotent or safely rejected without duplicate records. | TBD | US-000 | Integration | none | planned |
+| Invalid input | Required or malformed fields are submitted | User receives field-level validation; no partial write is committed. | TBD | US-000 | Integration | none | planned |
+| Permission denied | Unauthorized actor attempts mutation | Request is rejected, logged when required, and no state changes. | TBD | US-000 | Integration | none | planned |
+| Concurrent update | Two actors update the same record | Stale update is rejected or merged according to documented policy. | TBD | US-000 | Integration | none | planned |
+| Stale data | User acts on outdated page state | System detects stale version and asks user to refresh/retry safely. | TBD | US-000 | E2E | none | planned |
+| Operation timeout | Long-running action exceeds timeout window | User receives clear status; recovery path records current state. | TBD | US-000 | Platform | none | planned |
 | Partial failure | Local write succeeds but external action fails | System records compensating action or recovery task; no silent data loss. | TBD | US-000 | Integration | none | planned |
 | Retry exhaustion | Retry policy reaches max attempts | Work item moves to dead-letter queue/runbook with owner and evidence. | TBD | US-000 | Platform | none | planned |
 `,
@@ -384,6 +398,51 @@ Memory layers:
 - Agent handoff memory.
 - Evidence memory.
 `,
+  "docs/product/project-brief.md": `# Project Brief
+
+## Topic
+TBD
+
+## Problem
+TBD
+
+## Outcome
+TBD
+
+## Domain Notes
+- TBD
+
+## Primary Users
+| Role | Goal | Key Permissions | Success Moment |
+| --- | --- | --- | --- |
+| TBD | TBD | TBD | TBD |
+`,
+  "docs/product/feature-map.md": `# Feature Map
+
+## Feature Catalog
+| Feature ID | Feature | User Value | MVP | Dependencies | Risk |
+| --- | --- | --- | --- | --- | --- |
+| FEAT-TBD-001 | TBD | TBD | yes/no | TBD | normal |
+
+## Release Mapping
+| Release | Features | Exit Criteria |
+| --- | --- | --- |
+| MVP | TBD | TBD |
+`,
+  "docs/product/mvp-scope.md": `# MVP Scope
+
+## MVP
+- TBD
+
+## Later
+- TBD
+
+## Explicitly Out Of Scope
+- TBD
+
+## Scope Rules
+- Every MVP item maps to a requirement, story, test, and evidence path.
+`,
   "docs/product/product-passport.yaml": `product_name: TBD
 product_type: TBD
 target_users: []
@@ -400,6 +459,133 @@ external_dependencies: []
 security_privacy_notes: []
 current_stage: RAW_INPUT
 readiness_status: NOT_READY
+`,
+  "docs/frontend/design-system.md": `# Frontend Design System
+
+## Visual Foundations
+TBD
+
+## Component Rules
+TBD
+
+## Accessibility
+TBD
+`,
+  "docs/frontend/component-architecture.md": `# Frontend Component Architecture
+
+## Structure
+TBD
+
+## State Rules
+TBD
+
+## Naming
+TBD
+`,
+  "docs/frontend/page-flow.md": `# Frontend Page Flow
+
+## Routes
+TBD
+
+## User Journeys
+TBD
+
+## States
+TBD
+`,
+  "docs/frontend/seo.md": `# Frontend SEO
+
+## Metadata
+TBD
+
+## Canonical URLs
+TBD
+
+## Sitemap And Robots
+TBD
+`,
+  "docs/backend/backend-architecture.md": `# Backend Architecture
+
+## Layers
+TBD
+
+## Services
+TBD
+
+## Repository
+TBD
+`,
+  "docs/backend/api-guidelines.md": `# API Guidelines
+
+## REST
+TBD
+
+## Versioning
+TBD
+
+## Pagination
+TBD
+`,
+  "docs/backend/database-schema.md": `# Database Schema
+
+## Entities
+TBD
+
+## Indexes
+TBD
+
+## Migrations
+TBD
+`,
+  "docs/backend/error-handling.md": `# Backend Error Handling
+
+## Error Envelope
+TBD
+
+## Retryable Errors
+TBD
+
+## Logging
+TBD
+`,
+  "docs/security/security-privacy-seo.md": `# Security, Privacy, And SEO
+
+## Authentication
+TBD
+
+## Authorization
+TBD
+
+## Privacy
+TBD
+
+## SEO
+TBD
+`,
+  "docs/delivery/DELIVERY_PLAN.md": `# Delivery Plan
+
+## Milestones
+TBD
+
+## Definition of Ready
+TBD
+
+## Definition of Done
+TBD
+`,
+  "docs/engineering/ENGINEERING_STANDARDS.md": `# Engineering Standards
+
+## SOLID
+TBD
+
+## Naming
+TBD
+
+## Testing
+TBD
+
+## Dependency Policy
+TBD
 `,
   "docs/product/prd.md": `# Product Requirements Document
 
@@ -534,62 +720,46 @@ TBD
 `,
   "docs/specs/state-machines.yaml": `version: 0.1.0
 state_machines:
-  - name: order-payment-shipping
+  - name: primary-workflow
     owner: TBD
     entity: TBD
     initial_state: draft
     states:
       - draft
-      - pending_payment
-      - paid
-      - fulfilling
-      - shipped
+      - active
       - completed
-      - cancelled
-      - refunded
+      - archived
       - failed
     transitions:
       - from: draft
-        event: submit_checkout
-        to: pending_payment
+        event: submit
+        to: active
         guards:
-          - inventory_reserved
-          - user_can_checkout
+          - required_fields_present
+          - actor_has_permission
         side_effects:
-          - create_payment_intent
+          - append_audit_log
         errors:
-          - CHECKOUT_OUT_OF_STOCK
-      - from: pending_payment
-        event: payment_timeout
+          - VALIDATION_REQUIRED_FIELD
+          - PERMISSION_DENIED
+      - from: active
+        event: complete
+        to: completed
+        guards:
+          - completion_rules_satisfied
+        side_effects:
+          - append_audit_log
+        errors:
+          - CONFLICT_STALE_VERSION
+      - from: active
+        event: timeout_or_failure
         to: failed
         guards:
           - timeout_window_elapsed
         side_effects:
-          - release_inventory_reservation
-          - enqueue_reconcile
+          - record_recovery_task
         errors:
-          - PAYMENT_TIMEOUT
-      - from: pending_payment
-        event: payment_callback_success
-        to: paid
-        guards:
-          - valid_signature
-          - idempotency_key_not_processed
-        side_effects:
-          - record_payment
-          - enqueue_fulfillment
-        errors:
-          - WEBHOOK_INVALID_SIGNATURE
-      - from: paid
-        event: cancel_or_refund
-        to: refunded
-        guards:
-          - refund_allowed
-        side_effects:
-          - request_refund
-          - append_audit_log
-        errors:
-          - REFUND_NOT_ALLOWED
+          - OPERATION_TIMEOUT
 `,
   "docs/specs/rbac.yaml": `version: 0.1.0
 roles:
@@ -632,29 +802,29 @@ rules:
 `,
   "docs/specs/error-codes.yaml": `version: 0.1.0
 errors:
-  - code: CHECKOUT_OUT_OF_STOCK
+  - code: VALIDATION_REQUIRED_FIELD
     owner: TBD
-    http_status: 409
-    user_message: The selected item is no longer available.
+    http_status: 400
+    user_message: Required information is missing.
     retryable: false
     linked_story: US-000
-  - code: PAYMENT_TIMEOUT
+  - code: PERMISSION_DENIED
     owner: TBD
-    http_status: 408
-    user_message: Payment confirmation timed out. We are checking the final status.
+    http_status: 403
+    user_message: You do not have permission to perform this action.
+    retryable: false
+    linked_story: US-000
+  - code: CONFLICT_STALE_VERSION
+    owner: TBD
+    http_status: 409
+    user_message: This record changed before your update was saved.
     retryable: true
     linked_story: US-000
-  - code: WEBHOOK_INVALID_SIGNATURE
+  - code: OPERATION_TIMEOUT
     owner: TBD
-    http_status: 401
-    user_message: Request could not be verified.
-    retryable: false
-    linked_story: US-000
-  - code: REFUND_NOT_ALLOWED
-    owner: TBD
-    http_status: 409
-    user_message: This payment cannot be refunded automatically.
-    retryable: false
+    http_status: 408
+    user_message: The operation timed out. Please check the current status before retrying.
+    retryable: true
     linked_story: US-000
 `,
   "docs/architecture.md": `# Architecture
@@ -679,6 +849,36 @@ TBD
 
 ## Security
 TBD
+`,
+  "docs/specs/project-blueprint.yaml": `version: 0.1.0
+run_id: TBD
+idea: TBD
+profile: TBD
+risk_lane: normal
+workflow:
+  phase: RAW_INPUT
+  requires_human_approval: true
+artifacts:
+  product: []
+  frontend: []
+  backend: []
+  gates: []
+`,
+  "docs/specs/engineering-standards.yaml": `version: 0.1.0
+idea: TBD
+principles:
+  - simple_explicit_code
+naming:
+  components: PascalCase
+  functions: camelCase
+  ids: stable_requirement_story_test_ids
+quality:
+  lint_required: true
+  tests_required: true
+  docs_traceability_required: true
+dependency_policy:
+  requires_decision_note: true
+  check_license_security_cost: true
 `,
   "docs/epics/epics.md": `# Epics
 

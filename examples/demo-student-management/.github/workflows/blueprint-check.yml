@@ -1,0 +1,17 @@
+name: Demo Blueprint Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  blueprint-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx -y github:dailam148i-IT/Software-Blueprint-Harness lint --ci
+      - run: npx -y github:dailam148i-IT/Software-Blueprint-Harness assess --ci --min-score 80

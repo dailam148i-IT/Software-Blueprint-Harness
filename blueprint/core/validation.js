@@ -316,8 +316,8 @@ async function validateEdgeCases(root, stories, qualityIssues) {
     qualityIssues.push("EDGE_CASE_MATRIX still contains placeholder ownership or story rows.");
   }
 
-  const context = await readProductContext(root);
-  const needsCommerceFlows = /payment|checkout|order|inventory|shipping|refund|callback|webhook/.test(context);
+  const context = await readCommerceContext(root);
+  const needsCommerceFlows = /payment|checkout|inventory|shipping|refund|marketplace|subscription|wallet|webhook provider|provider callback/.test(context);
   if (needsCommerceFlows) {
     for (const requiredFlow of [
       "duplicate callback",
@@ -346,6 +346,21 @@ async function readProductContext(root) {
     "docs/product/prd.md",
     "docs/product/data-api-contract.md",
     "docs/product/integration-protocol.md",
+    "docs/specs/state-machines.yaml",
+    "docs/specs/error-codes.yaml"
+  ];
+  const chunks = [];
+  for (const file of files) {
+    chunks.push(await readOptional(path.join(root, file)));
+  }
+  return normalizeText(chunks.join("\n"));
+}
+
+async function readCommerceContext(root) {
+  const files = [
+    "docs/product/product-passport.yaml",
+    "docs/product/prd.md",
+    "docs/product/feature-map.md",
     "docs/specs/state-machines.yaml",
     "docs/specs/error-codes.yaml"
   ];
@@ -392,6 +407,31 @@ async function validateStructuredSpecs(root, qualityIssues) {
     }
     if (containsTbd(text) || text.includes("US-000")) {
       qualityIssues.push(`${spec.label} still contains placeholder owners or story links.`);
+    }
+    for (const marker of spec.requiredText) {
+      if (!text.includes(marker)) qualityIssues.push(`${spec.label} missing required marker: ${marker}.`);
+    }
+  }
+
+  for (const spec of [
+    {
+      path: "docs/specs/project-blueprint.yaml",
+      label: "Project blueprint spec",
+      schema: "project-blueprint.schema.json",
+      requiredText: ["profile", "risk_lane", "workflow", "artifacts"]
+    },
+    {
+      path: "docs/specs/engineering-standards.yaml",
+      label: "Engineering standards spec",
+      schema: "engineering-standards.schema.json",
+      requiredText: ["principles", "naming", "quality", "dependency_policy"]
+    }
+  ]) {
+    const text = await readOptional(path.join(root, spec.path));
+    if (!text) continue;
+    await validateYamlSchema(root, spec.path, spec.schema, spec.label, qualityIssues);
+    if (containsTbd(text)) {
+      qualityIssues.push(`${spec.label} still contains placeholder content.`);
     }
     for (const marker of spec.requiredText) {
       if (!text.includes(marker)) qualityIssues.push(`${spec.label} missing required marker: ${marker}.`);

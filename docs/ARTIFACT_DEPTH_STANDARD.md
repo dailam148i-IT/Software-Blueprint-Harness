@@ -59,6 +59,26 @@ The UX spec must include:
 - Accessibility expectations.
 - Localization/content rules when product is multilingual.
 
+## Professional Workflow Docs Minimum Depth
+
+The professional docs created by `start-deep` should include:
+
+- Project brief: domain, problem, outcome, users, and open decisions.
+- Feature map: feature IDs, MVP flag, dependencies, release mapping, and risks.
+- MVP scope: included, later, explicitly out of scope, and scope-change rule.
+- Delivery plan: milestones, Definition of Ready, Definition of Done, and sprint/story rules.
+- Engineering standards: SOLID policy, naming, dependency policy, tests, and review rules.
+
+These docs are advisory by default. Use `blueprint assess --ci --min-score 80` when a team wants them to become a CI bar.
+
+## Frontend Minimum Depth
+
+Frontend planning docs must include design tokens, component rules, state ownership, route/page flow, accessibility states, responsive expectations, and SEO/indexing behavior for public/private pages.
+
+## Backend Minimum Depth
+
+Backend planning docs must include layers, service boundaries, repository/data ownership, database/index/migration rules, API guidelines, error envelope, retryability, logging, and audit behavior.
+
 ## Architecture Minimum Depth
 
 Architecture must include:

@@ -34,14 +34,15 @@ Options:
 
 `init` also ensures `.gitignore` contains `refs/vendor/` and `refs/REFS_LOCK.json` so synced reference repositories are not committed by accident.
 
-## `blueprint start`
+## `blueprint start-base`
 
-Creates the simple prompt workflow package from one product idea.
+Creates the base discovery package from one product idea. `blueprint start` and `blueprint /start` are aliases for this command.
 
 ```bash
-blueprint start "I need to build a student management web app" --depth deep
-blueprint /start "I need to build a student management web app" --depth deep
-blueprint start "I need to build a student management web app" --depth deep --run-research
+blueprint start-base "I need to build a student management web app"
+blueprint start "I need to build a student management web app"
+blueprint /start "I need to build a student management web app"
+blueprint start-base "I need to build a student management web app" --run-research
 ```
 
 Outputs:
@@ -50,9 +51,59 @@ Outputs:
 .blueprint/intake/<run-id>/
 docs/intake/<run-id>.md
 .blueprint/research/runs/<run-id>/plan.md
+.blueprint/next.json
 ```
 
-The package contains clarifying questions, a multi-agent plan, a verification gate, a human approval file, a documentation workplan, and a ready-to-use `/blueprint-start` orchestrator prompt.
+The package contains base analysis, clarifying questions, a multi-agent plan, a verification gate, a human approval file, a documentation workplan, and a ready-to-use `/blueprint-start` orchestrator prompt.
+
+## `blueprint start-deep`
+
+Creates the professional planning document set from the latest base run. It smart-updates scaffold/TBD files but keeps existing non-placeholder files.
+
+```bash
+blueprint start-deep --from-latest
+blueprint start-deep --from-latest --dry-run
+blueprint start-deep --from-latest --json
+```
+
+It creates or updates product, frontend, backend, security, delivery, engineering, epic, story, and machine-readable spec artifacts.
+
+## `blueprint approve`
+
+Records human approval for the latest workflow run. Approval does not bypass readiness.
+
+```bash
+blueprint approve --from-latest --yes
+blueprint approve --from-latest --yes --dry-run
+```
+
+Outputs:
+
+```text
+.blueprint/approvals/<run-id>.json
+.blueprint/next.json
+```
+
+## `blueprint next`
+
+Shows the next command and suggested prompt stored by the last workflow command.
+
+```bash
+blueprint next
+blueprint next --json
+```
+
+## `blueprint assess`
+
+Runs an advisory role-based quality assessment. By default it warns only; it fails CI only when `--ci --min-score` is used.
+
+```bash
+blueprint assess
+blueprint assess --json
+blueprint assess --ci --min-score 80
+```
+
+Roles: PM, BA, UX, Frontend, Backend, API, Security, QA, DevOps.
 
 ## `blueprint status`
 

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Project Spec",
+  "type": "object",
+  "required": ["version", "idea", "profile", "risk_lane", "workflow", "artifacts"],
+  "properties": {
+    "version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "idea": { "type": "string" },
+    "profile": { "type": "string" },
+    "risk_lane": { "type": "string", "enum": ["tiny", "normal", "high", "high-risk"] },
+    "workflow": {
+      "type": "object",
+      "required": ["phase", "requires_human_approval"],
+      "properties": {
+        "phase": { "type": "string" },
+        "requires_human_approval": { "type": "boolean" }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["product", "frontend", "backend", "gates"],
+      "properties": {
+        "product": { "type": "array", "items": { "type": "string" } },
+        "frontend": { "type": "array", "items": { "type": "string" } },
+        "backend": { "type": "array", "items": { "type": "string" } },
+        "gates": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

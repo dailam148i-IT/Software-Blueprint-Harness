@@ -1,0 +1,27 @@
+version: 0.1.0
+run_id: demo-student-management
+idea: Student Management System for training centers
+profile: web_admin_app
+risk_lane: high
+workflow:
+  phase: start-deep
+  requires_human_approval: true
+artifacts:
+  product:
+    - docs/product/project-brief.md
+    - docs/product/feature-map.md
+    - docs/product/mvp-scope.md
+  frontend:
+    - docs/frontend/design-system.md
+    - docs/frontend/component-architecture.md
+    - docs/frontend/page-flow.md
+    - docs/frontend/seo.md
+  backend:
+    - docs/backend/backend-architecture.md
+    - docs/backend/api-guidelines.md
+    - docs/backend/database-schema.md
+    - docs/backend/error-handling.md
+  gates:
+    - blueprint assess
+    - blueprint lint --ci
+    - blueprint readiness

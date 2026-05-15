@@ -8,7 +8,9 @@ Do not treat this as a markdown folder. Treat it as a project operating system.
 
 ```text
 Raw idea
--> intake
+-> start-base intake
+-> start-deep professional plan
+-> human approve
 -> research
 -> product contract
 -> solution design
@@ -29,19 +31,15 @@ I want to create a website for managing students.
 
 Recommended flow:
 
-1. Fill `docs/product/product-passport.yaml`.
-2. Write `docs/research/market-domain-research.md`.
-3. Write `docs/product/prd.md`.
-4. Write `docs/product/ux-spec.md` if the product has UI.
-5. Write `docs/architecture.md`.
-6. Write `docs/product/data-api-contract.md`.
-7. Write `docs/product/integration-protocol.md`.
-8. Update `docs/specs/state-machines.yaml`, `docs/specs/rbac.yaml`, and `docs/specs/error-codes.yaml`.
-9. Fill `docs/EDGE_CASE_MATRIX.md` and `docs/TRACEABILITY_MATRIX.md`.
-10. Create epics in `docs/epics/epics.md`.
-11. Create story packets in `docs/stories/`.
-12. Map stories to proof in `docs/TEST_MATRIX.md`.
-13. Run `blueprint lint --ci` and `blueprint readiness`.
+1. Run `blueprint start-base "<idea>"`.
+2. Answer the generated questions.
+3. Run `blueprint start-deep --from-latest`.
+4. Review the professional plan and docs.
+5. Run `blueprint approve --from-latest --yes`.
+6. Run `blueprint assess --ci --min-score 80`.
+7. Run `blueprint lint --ci` and `blueprint readiness`.
+
+The deep workflow creates or updates product brief, feature map, MVP scope, PRD, UX spec, frontend design system, backend/API guides, database and error handling notes, security/privacy/SEO, engineering standards, delivery plan, specs, epics, stories, matrices, and readiness artifacts.
 
 The user should not be forced to choose technology immediately. First gather product intent, then research, then propose options and ask the user to approve.
 
@@ -145,6 +143,26 @@ blueprint github create-issues --use-gh --repo owner/name --confirm-publish
 `blueprint lint --ci` is the strict pre-code automation. It fails if implementation-critical docs still contain `TBD`, story packets lack ownership or file boundaries, specs remain placeholders, edge-case coverage is incomplete, or traceability is missing from requirement to story to test evidence.
 
 Use `blueprint check` for adoption and `blueprint lint --ci` before implementation.
+
+## Advisory Assessment
+
+`blueprint assess` checks whether the docs are professional enough from multiple role perspectives: PM, BA, UX, Frontend, Backend, API, Security, QA, and DevOps.
+
+```bash
+blueprint assess
+blueprint assess --json
+blueprint assess --ci --min-score 80
+```
+
+By default this is advisory. It becomes blocking only when you pass `--ci --min-score`.
+
+## Next Prompt Engine
+
+Workflow commands write `.blueprint/next.json` and print a professional next prompt. Use this when the user or agent gets stuck:
+
+```bash
+blueprint next
+```
 
 When lint fails, run:
 

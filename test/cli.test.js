@@ -43,6 +43,14 @@ test("init creates harness and GitHub templates", async () => {
     assert.equal(await exists(path.join(root, "docs/EXAMPLE_COMPARISON.md")), true);
     assert.equal(await exists(path.join(root, "docs/PROJECT_RECOVERY_GUIDE.md")), true);
     assert.equal(await exists(path.join(root, "docs/COMMERCE_RISK_PLAYBOOK.md")), true);
+    assert.equal(await exists(path.join(root, "docs/product/project-brief.md")), true);
+    assert.equal(await exists(path.join(root, "docs/product/feature-map.md")), true);
+    assert.equal(await exists(path.join(root, "docs/product/mvp-scope.md")), true);
+    assert.equal(await exists(path.join(root, "docs/frontend/design-system.md")), true);
+    assert.equal(await exists(path.join(root, "docs/backend/api-guidelines.md")), true);
+    assert.equal(await exists(path.join(root, "docs/security/security-privacy-seo.md")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/project-blueprint.yaml")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/engineering-standards.yaml")), true);
     assert.equal(await exists(path.join(root, ".github/workflows/blueprint-check.yml")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/README.md")), true);
     assert.equal(await exists(path.join(root, "examples/demo-student-management/docs/EDGE_CASE_MATRIX.md")), true);
@@ -57,6 +65,7 @@ test("init creates harness and GitHub templates", async () => {
     assert.match(agentRules, /\/start/);
     assert.equal(await exists(path.join(root, "docs/AGENT_BOOTSTRAP.md")), true);
     assert.match(gitignore, /refs\/vendor\//);
+    assert.match(gitignore, /\.blueprint\/next\.json/);
     assert.doesNotMatch(workflow, /--strict/);
   });
 });
@@ -100,6 +109,17 @@ test("golden student-management demo passes production lint", async () => {
   const output = await capture(() => runCli(["lint", "--directory", demoRoot, "--ci"]));
   assert.match(output, /PASS blueprint production lint/);
   assert.equal(process.exitCode || 0, 0);
+});
+
+test("golden student-management demo passes advisory assess", async () => {
+  const demoRoot = path.resolve("examples/demo-student-management");
+  const output = await capture(() => runCli(["assess", "--directory", demoRoot, "--json", "--ci", "--min-score", "80"]));
+  const report = JSON.parse(output);
+  assert.equal(process.exitCode || 0, 0);
+  assert.ok(report.score >= 80);
+  assert.ok(report.roles.find((role) => role.role === "Frontend"));
+  assert.ok(report.roles.find((role) => role.role === "Backend"));
+  assert.match(report.next.command, /lint|start-deep/);
 });
 
 test("explain-fail prints actionable repair checklist", async () => {
@@ -293,6 +313,17 @@ test("lint catches missing story trace and edge-case rows", async () => {
   });
 });
 
+test("non-commerce projects are not forced through commerce edge-case gates", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const output = await capture(() => runCli(["lint", "--directory", root]));
+    assert.doesNotMatch(output, /missing standard commerce\/integration flow: duplicate callback/i);
+    assert.doesNotMatch(output, /missing standard commerce\/integration flow: refund/i);
+    assert.doesNotMatch(output, /missing standard commerce\/integration flow: out of stock/i);
+    process.exitCode = 0;
+  });
+});
+
 test("start creates simple prompt workflow package", async () => {
   await withTempProject(async (root) => {
     await runCli(["init", "--directory", root, "--yes"]);
@@ -304,11 +335,59 @@ test("start creates simple prompt workflow package", async () => {
     assert.match(latest.idea, /student management/);
     assert.equal(latest.approval_status, "PENDING");
     assert.equal(await exists(path.join(root, latest.intake_dir, "01-questions.md")), true);
+    assert.equal(await exists(path.join(root, latest.intake_dir, "00-base-analysis.md")), true);
     assert.equal(await exists(path.join(root, latest.intake_dir, "02-multi-agent-plan.md")), true);
     assert.equal(await exists(path.join(root, latest.intake_dir, "04-human-approval.md")), true);
     assert.equal(await exists(path.join(root, latest.intake_dir, "orchestrator-prompt.md")), true);
     assert.equal(await exists(path.join(root, latest.research_dir, "plan.md")), true);
     assert.equal(await exists(path.join(root, `docs/intake/${latest.run_id}.md`)), true);
+    assert.equal(await exists(path.join(root, ".blueprint/next.json")), true);
+    const next = JSON.parse(await fs.readFile(path.join(root, ".blueprint/next.json"), "utf8"));
+    assert.match(next.command, /start-deep/);
+  });
+});
+
+test("start-base dry-run and start alias print next prompt", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    const base = await capture(() =>
+      runCli(["start-base", "website quản lý sinh viên", "--directory", root, "--dry-run"])
+    );
+    assert.match(base, /would create .blueprint\/intake/i);
+    assert.match(base, /Next command: blueprint start-deep --from-latest/i);
+    assert.match(base, /Suggested prompt:/i);
+
+    const alias = await capture(() => runCli(["start", "website quản lý sinh viên", "--directory", root, "--dry-run"]));
+    assert.match(alias, /Next command: blueprint start-deep --from-latest/i);
+  });
+});
+
+test("start-deep approve and next drive professional workflow", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    await runCli(["start-base", "website quản lý sinh viên", "--directory", root]);
+
+    const dryDeep = await capture(() => runCli(["start-deep", "--from-latest", "--directory", root, "--dry-run"]));
+    assert.match(dryDeep, /would create professional deep plan/i);
+    assert.match(dryDeep, /docs\/frontend\/design-system.md/i);
+    assert.match(dryDeep, /Next command: blueprint approve --from-latest --yes/i);
+
+    await runCli(["start-deep", "--from-latest", "--directory", root]);
+    assert.equal(await exists(path.join(root, "docs/frontend/design-system.md")), true);
+    assert.equal(await exists(path.join(root, "docs/backend/api-guidelines.md")), true);
+    assert.equal(await exists(path.join(root, "docs/specs/project-blueprint.yaml")), true);
+
+    const dryApprove = await capture(() => runCli(["approve", "--from-latest", "--yes", "--directory", root, "--dry-run"]));
+    assert.match(dryApprove, /would write .blueprint\/approvals/i);
+    assert.match(dryApprove, /Next command: blueprint lint --ci && blueprint readiness/i);
+
+    await runCli(["approve", "--from-latest", "--yes", "--directory", root]);
+    const latest = JSON.parse(await fs.readFile(path.join(root, ".blueprint/intake/latest.json"), "utf8"));
+    assert.equal(latest.approval_status, "APPROVED_FOR_READINESS");
+    assert.equal(await exists(path.join(root, `.blueprint/approvals/${latest.run_id}.json`)), true);
+
+    const next = await capture(() => runCli(["next", "--directory", root]));
+    assert.match(next, /Next command: blueprint lint --ci && blueprint readiness/i);
   });
 });
 

@@ -8,6 +8,8 @@ Machine-readable artifacts are validated with `yaml` and `ajv` during `blueprint
 | `docs/specs/state-machines.yaml` | `blueprint/schemas/state-machine.schema.json` |
 | `docs/specs/rbac.yaml` | `blueprint/schemas/rbac.schema.json` |
 | `docs/specs/error-codes.yaml` | `blueprint/schemas/error-codes.schema.json` |
+| `docs/specs/project-blueprint.yaml` | `blueprint/schemas/project-blueprint.schema.json` |
+| `docs/specs/engineering-standards.yaml` | `blueprint/schemas/engineering-standards.schema.json` |
 | `extensions/*/extension.yaml` | `blueprint/schemas/extension.schema.json` |
 
 Schema validation catches malformed YAML, wrong scalar/list/object types, missing required fields, and invalid enum values. The production lint gate still adds semantic checks such as stable IDs, traceability, edge-case coverage, test proof, and placeholder rejection.

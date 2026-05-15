@@ -1,0 +1,17 @@
+version: 0.1.0
+idea: Student Management System for training centers
+principles:
+  - simple_explicit_code
+  - solid_when_useful
+  - documented_design_patterns
+naming:
+  components: PascalCase
+  functions: camelCase
+  ids: stable_requirement_story_test_ids
+quality:
+  lint_required: true
+  tests_required: true
+  docs_traceability_required: true
+dependency_policy:
+  requires_decision_note: true
+  check_license_security_cost: true

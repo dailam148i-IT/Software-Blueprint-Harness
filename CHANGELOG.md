@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.3.5 - Unreleased
+## 0.4.0 - Unreleased
+
+- Added `start-base`, `start-deep`, `approve`, `next`, and `assess` commands.
+- Added `.blueprint/next.json` next-prompt guidance for the professional workflow.
+- Added professional planning docs for product, frontend, backend, security, delivery, and engineering standards.
+- Added project blueprint and engineering standards YAML specs with schemas.
+- Added advisory role-based assessment for PM, BA, UX, Frontend, Backend, API, Security, QA, and DevOps.
+- Removed commerce/payment bias from generic templates and kept commerce gates context-sensitive.
+
+## 0.3.5
 
 - Added path containment for template, extension, GitHub issue, and reference outputs.
 - Added YAML parsing through `yaml` and JSON Schema validation through `ajv`.

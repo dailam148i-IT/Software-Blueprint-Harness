@@ -4,7 +4,9 @@
 
 ```text
 RAW_INPUT
-INTAKE_READY
+START_BASE_READY
+START_DEEP_READY
+HUMAN_APPROVED
 RESEARCH_READY
 PRODUCT_READY
 SOLUTION_READY
@@ -25,6 +27,11 @@ RETROSPECTIVE_DONE
 
 ## Public Modes
 
+- `blueprint-start-base`
+- `blueprint-start-deep`
+- `blueprint-approve`
+- `blueprint-assess`
+- `blueprint-next`
 - `blueprint-intake`
 - `blueprint-research`
 - `blueprint-product`

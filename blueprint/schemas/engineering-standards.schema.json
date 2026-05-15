@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blueprint Engineering Standards",
+  "type": "object",
+  "required": ["version", "principles", "naming", "quality", "dependency_policy"],
+  "properties": {
+    "version": { "type": "string" },
+    "idea": { "type": "string" },
+    "principles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "naming": {
+      "type": "object",
+      "required": ["components", "functions", "ids"],
+      "properties": {
+        "components": { "type": "string" },
+        "functions": { "type": "string" },
+        "ids": { "type": "string" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["lint_required", "tests_required", "docs_traceability_required"],
+      "properties": {
+        "lint_required": { "type": "boolean" },
+        "tests_required": { "type": "boolean" },
+        "docs_traceability_required": { "type": "boolean" }
+      }
+    },
+    "dependency_policy": {
+      "type": "object",
+      "required": ["requires_decision_note", "check_license_security_cost"],
+      "properties": {
+        "requires_decision_note": { "type": "boolean" },
+        "check_license_security_cost": { "type": "boolean" }
+      }
+    }
+  }
+}

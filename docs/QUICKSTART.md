@@ -14,9 +14,9 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --yes 
 2. Tell the agent `nắm quy trình framework này`.
 3. Send `/start <your product idea>`.
 4. Answer the intake questions.
-5. Approve the multi-agent plan.
-6. Let the agent write the full docs.
-7. Run `blueprint lint --ci` and `blueprint readiness`.
+5. Run `start-deep` for professional planning docs.
+6. Review and approve the plan.
+7. Run `blueprint assess`, `blueprint lint --ci`, and `blueprint readiness`.
 
 Preview first:
 
@@ -70,14 +70,30 @@ nắm quy trình framework này
 CLI equivalent:
 
 ```bash
-npx -y github:dailam148i-IT/Software-Blueprint-Harness start "I want to build a website for managing students at a training center" --directory . --depth deep
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start-base "I want to build a website for managing students at a training center" --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness start-deep --from-latest --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness approve --from-latest --yes --directory .
+```
+
+Every command prints a `Next command` and `Suggested prompt`. You can re-open the last guidance with:
+
+```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness next --directory .
 ```
 
 The harness should produce or guide you toward:
 
+- Project Brief
+- Feature Map
+- MVP Scope
 - Product Passport
 - PRD
 - UX Spec
+- Frontend Design System
+- Backend/API Guidelines
+- Engineering Standards
+- Security/Privacy/SEO
+- Delivery Plan
 - Architecture
 - Data/API Contract
 - Integration Protocol
@@ -124,6 +140,7 @@ Give that packet to a coding agent instead of dumping the whole repo context.
 
 ```bash
 npx -y github:dailam148i-IT/Software-Blueprint-Harness explain-fail --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness assess --directory . --ci --min-score 80
 npx -y github:dailam148i-IT/Software-Blueprint-Harness lint --directory . --ci
 npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 ```

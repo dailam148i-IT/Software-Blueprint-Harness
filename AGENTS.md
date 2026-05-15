@@ -25,6 +25,7 @@ This repository is the source project for Software Blueprint Harness.
 - If output quality changes, update `docs/ARTIFACT_DEPTH_STANDARD.md`, `docs/EXAMPLE_COMPARISON.md`, and the skill quality rubric together.
 - Installer behavior must be safe: dry-run, merge, override, and no surprise destructive writes.
 - Any output path from templates, extensions, refs, integrations, or GitHub export must stay inside the target project.
+- Workflow commands should leave a useful next command and suggested prompt for the user or agent.
 
 ## Done Definition
 
