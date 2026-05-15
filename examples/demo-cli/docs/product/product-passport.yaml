@@ -1,0 +1,24 @@
+product_name: Bulk Rename CLI
+product_type: cli_tool
+target_users:
+  - developer
+  - content operator
+problem: Users need a safe way to rename many files using patterns without accidental data loss.
+desired_outcome: Rename operations are previewed, validated, and reversible when possible.
+in_scope:
+  - dry-run preview
+  - pattern-based rename
+  - collision detection
+out_of_scope:
+  - GUI
+  - cloud sync
+success_metrics:
+  - no accidental overwrite
+risk_level: normal
+chosen_track: standard
+tech_preferences:
+  - Node.js
+external_dependencies: []
+security_privacy_notes: []
+current_stage: PRODUCT_READY
+readiness_status: CONCERNS

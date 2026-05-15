@@ -1,0 +1,25 @@
+product_name: Daily Report Automation
+product_type: automation_workflow
+target_users:
+  - operations manager
+problem: Daily operational reports are manually assembled from multiple exports.
+desired_outcome: A scheduled workflow collects inputs, validates them, generates a report, and records evidence.
+in_scope:
+  - input folder scan
+  - CSV validation
+  - report generation
+  - failure log
+out_of_scope:
+  - dashboard UI
+  - real-time alerts
+success_metrics:
+  - report generated before 8 AM
+risk_level: normal
+chosen_track: standard
+tech_preferences:
+  - Python
+external_dependencies: []
+security_privacy_notes:
+  - input data may contain operational records
+current_stage: PRODUCT_READY
+readiness_status: CONCERNS

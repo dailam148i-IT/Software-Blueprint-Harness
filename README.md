@@ -54,6 +54,16 @@ blueprint extension create security-threat-model
 blueprint integration add github
 ```
 
+## Documentation
+
+- [Quickstart](docs/QUICKSTART.md)
+- [Usage Guide](docs/USAGE.md)
+- [CLI Commands](docs/COMMANDS.md)
+- [Workflow](docs/WORKFLOW.md)
+- [Quality Gates](docs/QUALITY_GATES.md)
+- [Multi-Agent Model](docs/MULTI_AGENT_OPERATING_MODEL.md)
+- [Examples](examples/README.md)
+
 ## What Gets Installed
 
 ```text

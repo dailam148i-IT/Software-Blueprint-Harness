@@ -360,6 +360,22 @@ jobs:
 };
 
 export const exampleTemplates = {
+  "examples/README.md": `# Examples
+
+Examples are documentation-only. They show how to prepare a project before implementation.
+
+## Demo Student Management
+
+Enterprise-style web admin app with sensitive personal data.
+
+## Demo CLI
+
+Quick/Standard CLI tool.
+
+## Demo Automation
+
+Automation workflow with input/output contracts and operational evidence.
+`,
   "examples/demo-student-management/README.md": `# Demo: Student Management
 
 Example blueprint for a student management web app. This demo intentionally contains docs only, not app source.
@@ -395,12 +411,76 @@ security_privacy_notes:
 current_stage: PRODUCT_READY
 readiness_status: CONCERNS
 `,
+  "examples/demo-student-management/docs/research/market-domain-research.md": `# Research Report: Student Management System
+
+Training centers need shared records for students, classes, attendance, and tuition.
+
+## Risks
+- Personal data exposure.
+- Weak role permissions.
+- Spreadsheet import errors.
+- Duplicate student records.
+
+## Open Questions
+- Do students log in?
+- Is Excel import required in MVP?
+- Is tuition informational or payment-connected?
+`,
   "examples/demo-cli/README.md": `# Demo: CLI Rename Tool
 
 Example Quick/Standard track for a CLI utility. No UI artifacts are required unless the product grows a UI.
 `,
+  "examples/demo-cli/docs/product/product-passport.yaml": `product_name: Bulk Rename CLI
+product_type: cli_tool
+target_users:
+  - developer
+problem: Users need a safe way to rename many files using patterns.
+desired_outcome: Rename operations are previewed, validated, and collision-safe.
+in_scope:
+  - dry-run preview
+  - pattern-based rename
+  - collision detection
+out_of_scope:
+  - GUI
+success_metrics:
+  - no accidental overwrite
+constraints: []
+risk_level: normal
+chosen_track: standard
+tech_preferences:
+  - Node.js
+external_dependencies: []
+security_privacy_notes: []
+current_stage: PRODUCT_READY
+readiness_status: CONCERNS
+`,
   "examples/demo-automation/README.md": `# Demo: Automation Workflow
 
 Example blueprint for an automation/data workflow with input/output contracts, retry behavior, and evidence requirements.
+`,
+  "examples/demo-automation/docs/product/product-passport.yaml": `product_name: Daily Report Automation
+product_type: automation_workflow
+target_users:
+  - operations manager
+problem: Daily reports are manually assembled from multiple exports.
+desired_outcome: Workflow collects inputs, validates them, generates a report, and records evidence.
+in_scope:
+  - input folder scan
+  - CSV validation
+  - report generation
+  - failure log
+out_of_scope:
+  - dashboard UI
+success_metrics:
+  - report generated before 8 AM
+constraints: []
+risk_level: normal
+chosen_track: standard
+tech_preferences:
+  - Python
+external_dependencies: []
+security_privacy_notes: []
+current_stage: PRODUCT_READY
+readiness_status: CONCERNS
 `
 };
