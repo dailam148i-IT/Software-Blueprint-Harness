@@ -1,6 +1,6 @@
 {
   "name": "software-blueprint-harness",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Documentation-first software delivery harness for humans, agents, and multi-agent development teams.",
   "type": "module",
   "bin": {
@@ -8,9 +8,13 @@
   },
   "files": [
     "AGENTS.md",
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
     "INSTALL.md",
     "LICENSE",
     "README.md",
+    "SECURITY.md",
     "bin/",
     "blueprint/",
     "docs/",
@@ -27,7 +31,9 @@
     "check": "node --test test/cli.test.js",
     "test": "node --test test/cli.test.js",
     "test:init": "node bin/blueprint.js init --directory ./tmp-test --yes --with-github --with-examples",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "smoke:pack": "node scripts/smoke-packed.js",
+    "audit:prod": "npm audit --omit=dev"
   },
   "keywords": [
     "ai-agents",
@@ -51,5 +57,9 @@
   "homepage": "https://github.com/dailam148i-IT/Software-Blueprint-Harness#readme",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "yaml": "^2.9.0"
   }
 }

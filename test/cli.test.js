@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { runCli } from "../blueprint/core/cli.js";
 import { parseSimpleYaml } from "../blueprint/core/simple-yaml.js";
+import { syncReferences } from "../blueprint/core/refs.js";
 
 async function withTempProject(fn) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "blueprint-test-"));
@@ -92,6 +93,13 @@ test("lint enforces production documentation gates", async () => {
     assert.equal(process.exitCode, 1);
     process.exitCode = 0;
   });
+});
+
+test("golden student-management demo passes production lint", async () => {
+  const demoRoot = path.resolve("examples/demo-student-management");
+  const output = await capture(() => runCli(["lint", "--directory", demoRoot, "--ci"]));
+  assert.match(output, /PASS blueprint production lint/);
+  assert.equal(process.exitCode || 0, 0);
 });
 
 test("explain-fail prints actionable repair checklist", async () => {
@@ -186,6 +194,75 @@ Checkout works.
   });
 });
 
+test("schema validation catches malformed and schema-invalid YAML", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    await fs.writeFile(path.join(root, "docs/product/product-passport.yaml"), "product_name: [broken\n", "utf8");
+    let output = await capture(() => runCli(["lint", "--directory", root]));
+    assert.match(output, /Product Passport is not valid YAML/i);
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
+
+    await runCli(["init", "--directory", root, "--yes", "--override"]);
+    await fs.writeFile(
+      path.join(root, "docs/specs/error-codes.yaml"),
+      `version: 0.1.0
+errors:
+  - code: bad-code
+    owner: qa-agent
+    http_status: "409"
+    user_message: Bad code.
+    retryable: "false"
+    linked_story: story-one
+`,
+      "utf8"
+    );
+    output = await capture(() => runCli(["lint", "--directory", root]));
+    assert.match(output, /Error-code spec failed schema validation/i);
+    assert.equal(process.exitCode, 1);
+    process.exitCode = 0;
+  });
+});
+
+test("path safety blocks unsafe extension and reference outputs", async () => {
+  await withTempProject(async (root) => {
+    await runCli(["init", "--directory", root, "--yes"]);
+    await fs.mkdir(path.join(root, "extensions/bad-extension"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, "extensions/bad-extension/extension.yaml"),
+      `name: bad-extension
+version: 0.1.0
+type: quality-gate-extension
+runs_on:
+  - before_readiness
+outputs:
+  - ../owned.md
+`,
+      "utf8"
+    );
+    const escapedOutput = path.join(path.dirname(root), "owned.md");
+    await fs.rm(escapedOutput, { force: true });
+
+    await assert.rejects(
+      () => runCli(["extension", "run", "before_readiness", "--directory", root]),
+      /must stay inside/i
+    );
+    assert.equal(await exists(escapedOutput), false);
+
+    const repoRoot = path.join(root, "fake-framework");
+    await fs.mkdir(path.join(repoRoot, "refs"), { recursive: true });
+    await fs.writeFile(
+      path.join(repoRoot, "refs/catalog.json"),
+      JSON.stringify({ references: [{ name: "../escape", url: "https://example.invalid/repo.git" }] }),
+      "utf8"
+    );
+    await assert.rejects(
+      () => syncReferences({ repoRoot, targetRoot: root, dryRun: true }),
+      /single path segment|inside/i
+    );
+  });
+});
+
 test("story and context packet generation work", async () => {
   await withTempProject(async (root) => {
     await runCli(["init", "--directory", root, "--yes"]);
@@ -274,7 +351,7 @@ test("readiness blocks placeholder documentation", async () => {
     await runCli(["init", "--directory", root, "--yes"]);
     await runCli(["new-story", "Create student profile", "--directory", root]);
     const output = await capture(() => runCli(["readiness", "--directory", root]));
-    assert.match(output, /FAIL/);
+    assert.match(output, /NOT_READY/);
     const readiness = await fs.readFile(path.join(root, "docs/readiness-review.md"), "utf8");
     assert.match(readiness, /placeholder/i);
     assert.match(readiness, /Product Passport field is not implementation-ready/i);
@@ -329,6 +406,14 @@ test("github issue export creates issue markdown and index", async () => {
   await withTempProject(async (root) => {
     await runCli(["init", "--directory", root, "--yes"]);
     await runCli(["new-story", "Create student profile", "--directory", root]);
+    await assert.rejects(
+      () => runCli(["github", "create-issues", "--directory", root, "--use-gh"]),
+      /requires --repo/i
+    );
+    await assert.rejects(
+      () => runCli(["github", "create-issues", "--directory", root, "--use-gh", "--repo", "owner/name"]),
+      /confirm-publish/i
+    );
     await runCli(["github", "create-issues", "--directory", root]);
     await runCli(["github", "create-issues", "--directory", root]);
     assert.equal(await exists(path.join(root, ".blueprint/github/issues/US-001.md")), true);

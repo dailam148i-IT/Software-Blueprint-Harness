@@ -3,7 +3,9 @@
 Gate statuses:
 
 - PASS
-- PASS_WITH_CONCERNS
+- READY_FOR_IMPLEMENTATION
+- READY_WITH_ACCEPTED_RISK
+- PASS_WITH_CONCERNS (structural/adoption checks only)
 - FAIL
 - BLOCKED
 
@@ -20,7 +22,7 @@ Gate statuses:
 - Agent Gate
 - Pre-Code Gate
 
-Implementation starts only when the Pre-Code Gate says `READY_FOR_IMPLEMENTATION`.
+Implementation starts only when the Pre-Code Gate says `READY_FOR_IMPLEMENTATION`. If readiness says `READY_WITH_ACCEPTED_RISK`, implementation is still blocked until a human accepts every concern with owner, impact, expiry, and rollback note.
 
 ## Production Lint Gate
 

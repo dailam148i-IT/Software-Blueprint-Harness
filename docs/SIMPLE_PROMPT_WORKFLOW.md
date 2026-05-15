@@ -95,4 +95,6 @@ The documentation agents create:
 
 ## Implementation Rule
 
-Implementation starts only after `blueprint readiness` produces `READY_FOR_IMPLEMENTATION` or the human explicitly accepts named concerns.
+Implementation starts only after `blueprint readiness` produces `READY_FOR_IMPLEMENTATION`.
+
+If readiness produces `READY_WITH_ACCEPTED_RISK`, implementation remains blocked until the human accepts every concern with owner, impact, expiry, and rollback note.

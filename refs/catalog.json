@@ -49,6 +49,16 @@
       "research_focus": ["context compression", "agent-facing docs", "skill distribution"],
       "expected_outputs": ["docs/CONTEXT_COMPRESSION.md", "docs/PROMPTS_END_TO_END.md"],
       "role": "Context compression, concise agent-facing docs, multi-tool skill distribution."
+    },
+    {
+      "name": "ruflo",
+      "url": "https://github.com/ruvnet/ruflo.git",
+      "default_ref": "main",
+      "trust_tier": "reference",
+      "license_policy": "review-before-reuse",
+      "research_focus": ["workflow templates", "plugin marketplace", "stateful orchestration", "approval gates", "verification witness", "security plugin hygiene"],
+      "expected_outputs": ["docs/WORKFLOW.md", "docs/EXTENSIONS.md", "docs/PRODUCTION_V1.md", "docs/QUALITY_GATES.md"],
+      "role": "RuFlo-style workflow lifecycle, plugin contracts, smoke-as-contract verification, security/audit extension posture."
     }
   ]
 }

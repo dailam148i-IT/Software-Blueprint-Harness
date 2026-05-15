@@ -24,7 +24,7 @@
     "out_of_scope": { "type": "array", "items": { "type": "string" } },
     "success_metrics": { "type": "array", "items": { "type": "string" } },
     "constraints": { "type": "array", "items": { "type": "string" } },
-    "risk_level": { "enum": ["tiny", "normal", "high"] },
+    "risk_level": { "enum": ["tiny", "normal", "high", "high-risk"] },
     "chosen_track": { "enum": ["quick", "standard", "enterprise"] },
     "current_stage": { "type": "string" },
     "readiness_status": { "type": "string" }

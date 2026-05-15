@@ -202,7 +202,7 @@ blueprint extension run before_readiness
 ## 12. Production Lint And Readiness Review
 
 ```text
-Run production lint and readiness. If either fails, fix the docs and story packets instead of starting code. Continue until the review says READY_FOR_IMPLEMENTATION or all concerns have owners and explicit acceptance.
+Run production lint and readiness. If either fails, fix the docs and story packets instead of starting code. Continue until the review says READY_FOR_IMPLEMENTATION. If it says READY_WITH_ACCEPTED_RISK, stop until the human explicitly accepts every concern with owner, impact, expiry, and rollback note.
 ```
 
 Expected commands:

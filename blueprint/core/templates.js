@@ -131,7 +131,7 @@ Every implementation prompt enters intake before code changes.
 `,
   "docs/QUALITY_GATES.md": `# Quality Gates
 
-Gate statuses: PASS, PASS_WITH_CONCERNS, FAIL, BLOCKED.
+Gate statuses: PASS, READY_FOR_IMPLEMENTATION, READY_WITH_ACCEPTED_RISK, FAIL, BLOCKED.
 
 ## Mandatory Gates
 - Research Gate: sources, insight, assumptions, risks.
@@ -234,7 +234,7 @@ Only after approval, write the full documentation set:
 
 ## Hard Stop
 
-Do not start implementation until \`blueprint readiness\` says \`READY_FOR_IMPLEMENTATION\` or the human explicitly accepts named concerns.
+Do not start implementation until \`blueprint readiness\` says \`READY_FOR_IMPLEMENTATION\`. If readiness says \`READY_WITH_ACCEPTED_RISK\`, implementation is blocked until a human accepts every concern with owner, impact, expiry, and rollback note.
 `,
   "docs/SIMPLE_PROMPT_WORKFLOW.md": `# Simple Prompt Workflow
 

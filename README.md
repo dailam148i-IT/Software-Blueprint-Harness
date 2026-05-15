@@ -47,6 +47,16 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness readiness --directory .
 
 ## Simplest Workflow
 
+### 3-Minute Path
+
+1. Install the harness into a project.
+2. Tell your agent to learn the process.
+3. Start with `/start <your product idea>`.
+4. Answer the intake questions.
+5. Review and approve the plan.
+6. Let the agent write the full docs.
+7. Run `blueprint lint --ci` and `blueprint readiness`.
+
 After install, tell your agent:
 
 ```text
@@ -89,6 +99,7 @@ blueprint extension create security-threat-model
 blueprint extension run before_readiness
 blueprint integration add github
 blueprint github create-issues
+blueprint github create-issues --use-gh --repo owner/name --confirm-publish
 blueprint refs sync --dry-run
 blueprint refs status
 blueprint refs index
@@ -100,6 +111,8 @@ Fresh GitHub installs run `blueprint check` without strict mode so a new repo ca
 
 Use `blueprint lint --ci` when you want the production-grade pre-code gate: no critical `TBD`, story ownership, machine-readable specs, edge-case coverage, and traceability from requirement to story to test evidence.
 
+Readiness uses `READY_FOR_IMPLEMENTATION` for clean approval and `READY_WITH_ACCEPTED_RISK` when implementation is possible only after a human explicitly accepts named concerns with owners, impact, expiry, and rollback notes.
+
 ## Documentation
 
 - [Quickstart](docs/QUICKSTART.md)
@@ -107,6 +120,7 @@ Use `blueprint lint --ci` when you want the production-grade pre-code gate: no c
 - [Usage Guide](docs/USAGE.md)
 - [CLI Commands](docs/COMMANDS.md)
 - [Artifact Depth Standard](docs/ARTIFACT_DEPTH_STANDARD.md)
+- [Schema Reference](docs/SCHEMA_REFERENCE.md)
 - [Example Comparison](docs/EXAMPLE_COMPARISON.md)
 - [Project Recovery Guide](docs/PROJECT_RECOVERY_GUIDE.md)
 - [Commerce Risk Playbook](docs/COMMERCE_RISK_PLAYBOOK.md)
@@ -117,6 +131,9 @@ Use `blueprint lint --ci` when you want the production-grade pre-code gate: no c
 - [Quality Gates](docs/QUALITY_GATES.md)
 - [Multi-Agent Model](docs/MULTI_AGENT_OPERATING_MODEL.md)
 - [Examples](examples/README.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ## What Gets Installed
 
@@ -129,6 +146,7 @@ docs/
   FEATURE_INTAKE.md
   QUALITY_GATES.md
   ARTIFACT_DEPTH_STANDARD.md
+  SCHEMA_REFERENCE.md
   EXAMPLE_COMPARISON.md
   PROJECT_RECOVERY_GUIDE.md
   COMMERCE_RISK_PLAYBOOK.md

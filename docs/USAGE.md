@@ -134,7 +134,11 @@ This creates issue markdown under:
 .blueprint/github/issues/
 ```
 
-The command also maintains `.blueprint/github/issues.index.json`. Use `--use-gh` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown. Re-running with `--use-gh` skips stories already marked created unless you pass `--force`.
+The command also maintains `.blueprint/github/issues.index.json`. Use `--use-gh --repo owner/name --confirm-publish` to create real GitHub issues through the GitHub CLI after reviewing the generated issue markdown. Re-running with `--use-gh` skips stories already marked created unless you pass `--force`.
+
+```bash
+blueprint github create-issues --use-gh --repo owner/name --confirm-publish
+```
 
 ## Production Lint
 
@@ -187,9 +191,9 @@ The AI should research or infer:
 
 `READY_FOR_IMPLEMENTATION` means implementation may start.
 
-`PASS_WITH_CONCERNS` means implementation may start only if concerns have owners and are acceptable.
+`READY_WITH_ACCEPTED_RISK` means implementation may start only after a human explicitly accepts every concern with owner, impact, expiry, and rollback note.
 
-`FAIL` means implementation should not start.
+`NOT_READY` means implementation should not start.
 
 `BLOCKED` means human input or missing source material is required.
 

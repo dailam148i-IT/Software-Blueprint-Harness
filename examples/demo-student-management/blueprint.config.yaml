@@ -1,0 +1,11 @@
+project: Software Blueprint Project
+version: 0.1.0
+default_track: standard
+language: vi
+readiness_gate: required
+memory:
+  enabled: true
+  compact_agent_context: true
+integrations:
+  github: false
+extensions: []

@@ -1,0 +1,10 @@
+product:
+  name: TBD
+  type: TBD
+  source: docs/product/product-passport.yaml
+decisions: []
+progress:
+  stage: RAW_INPUT
+  readiness: NOT_READY
+agent_handoffs: []
+evidence: []

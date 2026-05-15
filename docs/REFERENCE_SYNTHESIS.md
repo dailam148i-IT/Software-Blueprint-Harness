@@ -44,6 +44,19 @@ BMAD-style roles are represented in `docs/MULTI_AGENT_OPERATING_MODEL.md` and `d
 | multi-tool distribution thinking | CLI + skill + integration adapters |
 | eval discipline | `test/cli.test.js`, scenario examples |
 
+## RuFlo
+
+RuFlo is not imported as a runtime swarm engine in this harness. The useful fit is at the operating-system level: workflow lifecycle contracts, plugin manifests, verification smoke checks, memory/session portability, and marketplace-style extension hygiene.
+
+| Source Pattern | Harness Implementation |
+| --- | --- |
+| workflow lifecycle with pause/resume/cancel | Blueprint workflow stages, `/start` approval gate, future docs-state commands |
+| approval gates | human approval file, readiness gate, `READY_WITH_ACCEPTED_RISK` semantics |
+| plugin marketplace contracts | `extensions/*/extension.yaml`, `docs/EXTENSIONS.md`, path-safe extension outputs |
+| smoke as contract | CI tarball smoke, golden demo lint, adversarial validator tests |
+| witness/verification inventory | release checklist, future fix witness manifest, evidence paths |
+| security/audit plugins | built-in security/privacy extensions and high-risk required outputs |
+
 ## Security / Delivery References
 
 | Reference | Harness Use |

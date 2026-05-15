@@ -1,6 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parseSimpleYaml } from "./simple-yaml.js";
+import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020.js";
+import { parseSimpleYaml, parseYamlDocument } from "./simple-yaml.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const schemaRoot = path.resolve(__dirname, "../schemas");
+const ajv = new Ajv2020({ allErrors: true, strict: false });
+const schemaCache = new Map();
 
 export async function validateProject(root, requiredArtifacts, options = {}) {
   const missing = [];
@@ -20,6 +28,9 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
   const passportPath = path.join(root, "docs/product/product-passport.yaml");
   const passportText = await readOptional(passportPath);
   const passport = passportText ? parseSimpleYaml(passportText) : null;
+  if (passportText) {
+    await validateYamlSchema(root, "docs/product/product-passport.yaml", "product-passport.schema.json", "Product Passport", failures);
+  }
 
   if (!passport) {
     failures.push("Product Passport is missing or unreadable.");
@@ -109,6 +120,7 @@ export async function validateProject(root, requiredArtifacts, options = {}) {
   await validateTraceability(root, stories, qualityIssues);
   await validateEdgeCases(root, stories, qualityIssues);
   await validateStructuredSpecs(root, qualityIssues);
+  await validateExtensionManifests(root, failures);
   await validateDocumentReadiness(root, qualityIssues);
   await validateResearchDepth(root, qualityIssues);
   await validateStatusConsistency(root, passport, qualityIssues);
@@ -350,18 +362,21 @@ async function validateStructuredSpecs(root, qualityIssues) {
       path: "docs/specs/state-machines.yaml",
       label: "State machine spec",
       key: "state_machines",
+      schema: "state-machine.schema.json",
       requiredText: ["transitions", "guards", "side_effects", "errors"]
     },
     {
       path: "docs/specs/rbac.yaml",
       label: "RBAC spec",
       key: "roles",
+      schema: "rbac.schema.json",
       requiredText: ["permissions", "resources", "rules"]
     },
     {
       path: "docs/specs/error-codes.yaml",
       label: "Error-code spec",
       key: "errors",
+      schema: "error-codes.schema.json",
       requiredText: ["code:", "http_status", "retryable", "linked_story"]
     }
   ];
@@ -369,6 +384,7 @@ async function validateStructuredSpecs(root, qualityIssues) {
   for (const spec of specs) {
     const text = await readOptional(path.join(root, spec.path));
     if (!text) continue;
+    await validateYamlSchema(root, spec.path, spec.schema, spec.label, qualityIssues);
     const parsed = parseSimpleYaml(text);
     const entries = parsed ? parsed[spec.key] : null;
     if (!Array.isArray(entries) || entries.length === 0) {
@@ -383,6 +399,50 @@ async function validateStructuredSpecs(root, qualityIssues) {
   }
 }
 
+async function validateExtensionManifests(root, failures) {
+  const extRoot = path.join(root, "extensions");
+  let entries = [];
+  try {
+    entries = await fs.readdir(extRoot, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const relativePath = path.join("extensions", entry.name, "extension.yaml").replaceAll("\\", "/");
+    const text = await readOptional(path.join(root, relativePath));
+    if (!text) continue;
+    await validateYamlSchema(root, relativePath, "extension.schema.json", `${entry.name} extension manifest`, failures);
+  }
+}
+
+async function validateYamlSchema(root, relativePath, schemaFile, label, issues) {
+  const absolutePath = path.join(root, relativePath);
+  const text = await readOptional(absolutePath);
+  if (!text) return;
+
+  const parsed = parseYamlDocument(text);
+  if (parsed.error) {
+    issues.push(`${label} is not valid YAML: ${parsed.error.message}`);
+    return;
+  }
+
+  const validate = await loadSchema(schemaFile);
+  if (!validate(parsed.data)) {
+    const detail = ajv.errorsText(validate.errors, { separator: "; " });
+    issues.push(`${label} failed schema validation: ${detail}`);
+  }
+}
+
+async function loadSchema(schemaFile) {
+  if (schemaCache.has(schemaFile)) return schemaCache.get(schemaFile);
+  const schema = JSON.parse(await fs.readFile(path.join(schemaRoot, schemaFile), "utf8"));
+  const validate = ajv.compile(schema);
+  schemaCache.set(schemaFile, validate);
+  return validate;
+}
+
 function isPlaceholder(value) {
   if (Array.isArray(value)) return value.length === 0 || value.every(isPlaceholder);
   if (value && typeof value === "object") return Object.keys(value).length === 0;
@@ -393,7 +453,7 @@ function isPlaceholder(value) {
 }
 
 function containsTbd(text) {
-  return /\b(TBD|TODO)\b/i.test(text);
+  return /\b(TBD|TODO|coming soon|to be defined|lorem ipsum|sample placeholder)\b|chưa xác định/i.test(text);
 }
 
 function hasStoryPlaceholder(text) {
@@ -403,7 +463,6 @@ function hasStoryPlaceholder(text) {
     "Criterion 1.",
     "Criterion 2.",
     "Criterion 3.",
-    "Expected proof",
     "Owner: TBD",
     "Primary agent: TBD",
     "Handoff target: TBD",

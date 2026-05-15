@@ -1,0 +1,14 @@
+name: security-threat-model
+type: quality-gate-extension
+version: 0.1.0
+runs_on:
+  - before_readiness
+required_when:
+  risk_flags:
+    - auth
+    - authorization
+    - payment
+    - sensitive_data
+outputs:
+  - docs/security/threat-model.md
+owner: risk-reviewer-agent

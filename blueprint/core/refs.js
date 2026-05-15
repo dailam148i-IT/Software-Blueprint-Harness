@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import crypto from "node:crypto";
+import { assertInside, resolveInside, safeBasename } from "./path-safety.js";
 
 const REF_INDEX_EXTENSIONS = new Set([
   ".md",
@@ -36,24 +37,26 @@ export async function syncReferences({ repoRoot, targetRoot, dryRun = false, for
   }
 
   for (const ref of catalog.references) {
-    const target = path.join(vendorRoot, ref.name);
+    const refName = safeBasename(ref.name, "reference name");
+    const target = resolveInside(vendorRoot, refName, "reference target");
     const exists = await pathExists(target);
     if (exists && !force) {
-      results.push({ name: ref.name, action: "skip", reason: "exists" });
+      results.push({ name: refName, action: "skip", reason: "exists" });
       continue;
     }
 
     if (dryRun) {
-      results.push({ name: ref.name, action: exists ? "update" : "clone", url: ref.url });
+      results.push({ name: refName, action: exists ? "update" : "clone", url: ref.url });
       continue;
     }
 
     if (exists && force) {
+      assertInside(vendorRoot, target, "reference delete target");
       await fs.rm(target, { recursive: true, force: true });
     }
 
     await git(["clone", "--depth", "1", ref.url, target]);
-    results.push({ name: ref.name, action: "clone", url: ref.url });
+    results.push({ name: refName, action: "clone", url: ref.url });
   }
 
   if (!dryRun) {
@@ -70,12 +73,13 @@ export async function statusReferences({ repoRoot, targetRoot }) {
   const rows = [];
 
   for (const ref of catalog.references) {
-    const target = path.join(vendorRoot, ref.name);
+    const refName = safeBasename(ref.name, "reference name");
+    const target = resolveInside(vendorRoot, refName, "reference target");
     const exists = await pathExists(target);
     const gitInfo = exists ? await readGitInfo(target) : null;
-    const locked = lock?.references?.find((item) => item.name === ref.name);
+    const locked = lock?.references?.find((item) => item.name === refName);
     rows.push({
-      name: ref.name,
+      name: refName,
       url: ref.url,
       role: ref.role,
       requested_ref: ref.default_ref || null,
@@ -99,12 +103,13 @@ export async function indexReferences({ repoRoot, targetRoot }) {
   const references = [];
 
   for (const ref of catalog.references) {
-    const target = path.join(vendorRoot, ref.name);
+    const refName = safeBasename(ref.name, "reference name");
+    const target = resolveInside(vendorRoot, refName, "reference target");
     const exists = await pathExists(target);
     const gitInfo = exists ? await readGitInfo(target) : null;
-    const files = exists ? await collectReferenceFiles(target, ref.name, gitInfo?.commit || null) : [];
+    const files = exists ? await collectReferenceFiles(target, refName, gitInfo?.commit || null) : [];
     references.push({
-      name: ref.name,
+      name: refName,
       url: ref.url,
       role: ref.role,
       status: exists ? "present" : "missing",

@@ -8,6 +8,16 @@ This guide shows the fastest useful path from an idea to implementation-ready do
 npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --yes --with-github --with-examples
 ```
 
+### 3-Minute Path
+
+1. Install the harness.
+2. Tell the agent `nắm quy trình framework này`.
+3. Send `/start <your product idea>`.
+4. Answer the intake questions.
+5. Approve the multi-agent plan.
+6. Let the agent write the full docs.
+7. Run `blueprint lint --ci` and `blueprint readiness`.
+
 Preview first:
 
 ```bash
@@ -36,6 +46,7 @@ That is normal. A fresh project has structure, but it is not implementation-read
 Read these before asking an agent to write full docs:
 
 - `docs/ARTIFACT_DEPTH_STANDARD.md`
+- `docs/SCHEMA_REFERENCE.md`
 - `docs/EXAMPLE_COMPARISON.md`
 - `docs/COMMERCE_RISK_PLAYBOOK.md` for payment, shipping, inventory, auth, provider, or privacy risk
 
@@ -140,6 +151,7 @@ This clones the source method repos into `refs/vendor/` for local study.
 
 ```bash
 npx -y github:dailam148i-IT/Software-Blueprint-Harness github create-issues --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness github create-issues --directory . --use-gh --repo owner/name --confirm-publish
 ```
 
 This converts story packets into issue markdown under `.blueprint/github/issues/`.

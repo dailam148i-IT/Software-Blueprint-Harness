@@ -62,6 +62,8 @@ Block implementation when:
 
 Run `blueprint explain-fail`, `blueprint lint --ci`, and `blueprint readiness` before implementation when the CLI is available.
 
+`READY_WITH_ACCEPTED_RISK` is a human approval stop. Do not treat it as an automatic implementation pass unless the user records explicit concern acceptance with owner, impact, expiry, and rollback note.
+
 ## Output Discipline
 
 Every handoff should name:

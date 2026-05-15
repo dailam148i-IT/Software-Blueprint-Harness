@@ -13,6 +13,7 @@ import {
   synthesizeResearch,
   validateResearch
 } from "./research.js";
+import { resolveInside } from "./path-safety.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,7 @@ const REQUIRED_ARTIFACTS = [
   "docs/FEATURE_INTAKE.md",
   "docs/QUALITY_GATES.md",
   "docs/ARTIFACT_DEPTH_STANDARD.md",
+  "docs/SCHEMA_REFERENCE.md",
   "docs/EXAMPLE_COMPARISON.md",
   "docs/PROJECT_RECOVERY_GUIDE.md",
   "docs/COMMERCE_RISK_PLAYBOOK.md",
@@ -168,7 +170,7 @@ Usage:
   blueprint extension list [--directory <path>]
   blueprint extension run <hook> [--directory <path>]
   blueprint integration add github [--directory <path>]
-  blueprint github create-issues [--directory <path>] [--use-gh] [--repo owner/name] [--force]
+  blueprint github create-issues [--directory <path>] [--use-gh --repo owner/name --confirm-publish] [--force]
   blueprint refs sync [--directory <path>] [--dry-run] [--force]
   blueprint refs status [--directory <path>]
   blueprint refs index [--directory <path>]
@@ -234,7 +236,7 @@ async function readJson(filePath, fallback) {
 }
 
 async function writeFileSafe(root, relativePath, content, options) {
-  const target = path.join(root, relativePath);
+  const target = resolveInside(root, relativePath, "template output");
   const alreadyExists = await exists(target);
   const action = alreadyExists ? "update" : "create";
 
@@ -553,7 +555,7 @@ async function commandReadiness(options) {
   }
 
   const ready = blockers.length === 0;
-  const status = ready ? (concerns.length ? "PASS_WITH_CONCERNS" : "READY_FOR_IMPLEMENTATION") : "FAIL";
+  const status = ready ? (concerns.length ? "READY_WITH_ACCEPTED_RISK" : "READY_FOR_IMPLEMENTATION") : "NOT_READY";
   const content = `# Readiness Review
 
 Status: ${status}
@@ -566,7 +568,7 @@ ${blockers.length ? blockers.map((item) => `- ${item}`).join("\n") : "- None"}
 ${concerns.length ? concerns.map((item) => `- ${item}`).join("\n") : "- None"}
 
 ## Required Before Code
-${ready ? "- Approved story packet and context packet for each implementation agent." : "- Resolve blockers above, then rerun `blueprint readiness`."}
+${ready && concerns.length === 0 ? "- Approved story packet and context packet for each implementation agent." : ready ? "- Human must explicitly accept every concern with owner, impact, expiry, and rollback note before implementation." : "- Resolve blockers above, then rerun `blueprint readiness`."}
 `;
 
   if (!options["dry-run"]) {
@@ -734,11 +736,20 @@ async function commandGithub(args) {
   const subcommand = args[0];
   const options = parseOptions(args.slice(1));
   if (subcommand !== "create-issues") {
-    throw new Error("use `blueprint github create-issues [--use-gh] [--repo owner/name]`.");
+    throw new Error("use `blueprint github create-issues [--use-gh --repo owner/name --confirm-publish]`.");
   }
   const root = resolveDirectory(options);
-  const outDir = path.join(root, ".blueprint/github/issues");
-  const indexPath = path.join(root, ".blueprint/github/issues.index.json");
+  if (options["use-gh"]) {
+    if (!options.repo) {
+      throw new Error("live GitHub issue creation requires --repo owner/name to avoid publishing to the wrong repository.");
+    }
+    if (!options["confirm-publish"]) {
+      throw new Error("live GitHub issue creation publishes story text. Re-run with --confirm-publish after reviewing generated issue bodies.");
+    }
+  }
+
+  const outDir = resolveInside(root, ".blueprint/github/issues", "GitHub issue export directory");
+  const indexPath = resolveInside(root, ".blueprint/github/issues.index.json", "GitHub issue index");
   const issueIndex = await readJson(indexPath, {});
   await fs.mkdir(outDir, { recursive: true });
   const storiesDir = path.join(root, "docs/stories");
@@ -746,7 +757,7 @@ async function commandGithub(args) {
   for (const story of stories) {
     const storyPath = path.join(storiesDir, story);
     const text = await readText(storyPath);
-    const id = story.match(/US-\d{3}/)?.[0] || story.replace(/\.md$/, "");
+    const id = story.match(/US-\d{3}/)?.[0] || slugify(story.replace(/\.md$/, ""));
     const title = text.split(/\r?\n/)[0].replace(/^#\s*/, "");
     const body = `# ${title}
 
@@ -754,7 +765,7 @@ Generated from ${path.relative(root, storyPath).replaceAll("\\", "/")}.
 
 ${text}
 `;
-    const bodyFile = path.join(outDir, `${id}.md`);
+    const bodyFile = resolveInside(outDir, `${id}.md`, "GitHub issue body");
     await fs.writeFile(bodyFile, body, "utf8");
     console.log(`created ${path.relative(root, bodyFile).replaceAll("\\", "/")}`);
 
@@ -775,7 +786,7 @@ ${text}
         continue;
       }
       const ghArgs = ["issue", "create", "--title", title, "--body-file", bodyFile];
-      if (options.repo) ghArgs.push("--repo", options.repo);
+      ghArgs.push("--repo", options.repo);
       await runCommand("gh", ghArgs);
       issueIndex[id] = {
         ...issueIndex[id],
@@ -991,7 +1002,13 @@ async function evaluateExtensionGates(root) {
     }
 
     for (const output of outputs) {
-      const target = path.join(root, output);
+      let target;
+      try {
+        target = resolveInside(root, output, `${extension.name || extension._directory} output`);
+      } catch {
+        blockers.push(`${extension.name || extension._directory} has unsafe output path: ${output}`);
+        continue;
+      }
       const existsOutput = await exists(target);
       const content = existsOutput ? await safeRead(target) : "";
 
@@ -1002,6 +1019,9 @@ async function evaluateExtensionGates(root) {
 
       if (existsOutput && outputGateStatus(content) === "BLOCKED") {
         blockers.push(`${extension.name || extension._directory} output is BLOCKED: ${output}`);
+      }
+      if (existsOutput && extensionOutputIncomplete(content)) {
+        blockers.push(`${extension.name || extension._directory} output is incomplete or placeholder: ${output}`);
       }
     }
   }
@@ -1016,7 +1036,7 @@ async function runExtensionHook(root, hook) {
     if (!Array.isArray(extension.runs_on) || !extension.runs_on.includes(hook)) continue;
     ran += 1;
     for (const output of extension.outputs || []) {
-      const target = path.join(root, output);
+      const target = resolveInside(root, output, `${extension.name || extension._directory} output`);
       if (await exists(target)) {
         console.log(`skip    ${output} (exists)`);
         continue;
@@ -1067,6 +1087,15 @@ function contextMatchesRiskFlag(context, flag) {
 function outputGateStatus(content) {
   const match = content.match(/##?\s*Gate Status\s*:?\s*\n?\s*([A-Z_]+)/i);
   return match ? match[1].toUpperCase() : "";
+}
+
+function extensionOutputIncomplete(content) {
+  if (!content.trim()) return true;
+  if (/\b(TBD|TODO|coming soon|to be defined|sample)\b|chưa xác định/i.test(content)) return true;
+  for (const marker of ["## Findings", "## Gate Status"]) {
+    if (!content.includes(marker)) return true;
+  }
+  return false;
 }
 
 function normalizeText(value) {

@@ -17,13 +17,14 @@ This repository is the source project for Software Blueprint Harness.
 
 ## Rules
 
-- Keep the CLI dependency-free unless a dependency is clearly worth the install cost.
+- Keep dependencies small and justified; YAML and schema validation are part of the production contract.
 - Do not make app templates here; this project provides the harness around future apps.
 - Human-facing docs should explain why and how.
 - Agent-facing docs should be terse, specific, and action-oriented.
 - If behavior changes, update README, templates, skill instructions, and examples together.
 - If output quality changes, update `docs/ARTIFACT_DEPTH_STANDARD.md`, `docs/EXAMPLE_COMPARISON.md`, and the skill quality rubric together.
 - Installer behavior must be safe: dry-run, merge, override, and no surprise destructive writes.
+- Any output path from templates, extensions, refs, integrations, or GitHub export must stay inside the target project.
 
 ## Done Definition
 

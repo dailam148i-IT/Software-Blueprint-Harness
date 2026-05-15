@@ -155,12 +155,12 @@ blueprint integration add github
 
 ## `blueprint github create-issues`
 
-Exports story packets into GitHub issue markdown files. With `--use-gh`, it calls `gh issue create`, so GitHub CLI must be installed and authenticated.
+Exports story packets into GitHub issue markdown files. With `--use-gh`, it calls `gh issue create`, so GitHub CLI must be installed and authenticated. Live publishing requires `--repo` and `--confirm-publish` because story bodies can contain private product context.
 
 ```bash
 blueprint github create-issues
-blueprint github create-issues --use-gh --repo owner/name
-blueprint github create-issues --use-gh --repo owner/name --force
+blueprint github create-issues --use-gh --repo owner/name --confirm-publish
+blueprint github create-issues --use-gh --repo owner/name --confirm-publish --force
 ```
 
 The command writes `.blueprint/github/issues.index.json` to avoid duplicate issue creation on repeated `--use-gh` runs.

@@ -34,6 +34,15 @@ npx -y github:dailam148i-IT/Software-Blueprint-Harness init --directory . --yes
 
 ## After Install
 
+If the package is not installed globally or as a project dependency, keep using the GitHub `npx` runner:
+
+```bash
+npx -y github:dailam148i-IT/Software-Blueprint-Harness status --directory .
+npx -y github:dailam148i-IT/Software-Blueprint-Harness check --directory .
+```
+
+If `blueprint` is on your PATH:
+
 ```bash
 blueprint status
 blueprint check
